@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Users, Play, Shield, User, Hash } from "lucide-react";
 import { motion } from "motion/react";
-import { io } from "socket.io-client";
+import { Socket } from "socket.io-client";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -13,9 +13,10 @@ interface LobbyProps {
   onJoin: (roomId: string, playerName: string, password?: string) => void;
   initialRoomId: string;
   initialPlayerName: string;
+  socket: Socket;
 }
 
-export default function Lobby({ onJoin, initialRoomId, initialPlayerName }: LobbyProps) {
+export default function Lobby({ onJoin, initialRoomId, initialPlayerName, socket }: LobbyProps) {
   const [mode, setMode] = useState<"join" | "create">("join");
   const [roomId, setRoomId] = useState(initialRoomId);
   const [playerName, setPlayerName] = useState(initialPlayerName);
@@ -23,14 +24,20 @@ export default function Lobby({ onJoin, initialRoomId, initialPlayerName }: Lobb
   const [isPublic, setIsPublic] = useState(true);
   const [error, setError] = useState("");
 
-  const socket = React.useMemo(() => {
-    const s = io();
-    s.on("roomCreated", (newRoomId) => {
+  useEffect(() => {
+    const handleRoomCreated = (newRoomId: string) => {
       onJoin(newRoomId, playerName, password);
-    });
-    s.on("error", (msg) => setError(msg));
-    return s;
-  }, [playerName, password, onJoin]);
+    };
+    const handleError = (msg: string) => setError(msg);
+
+    socket.on("roomCreated", handleRoomCreated);
+    socket.on("error", handleError);
+
+    return () => {
+      socket.off("roomCreated", handleRoomCreated);
+      socket.off("error", handleError);
+    };
+  }, [socket, playerName, password, onJoin]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

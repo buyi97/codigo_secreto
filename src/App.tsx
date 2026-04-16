@@ -4,14 +4,10 @@ import { GameState, Player } from "./lib/gameLogic";
 import Lobby from "./components/Lobby";
 import GameRoom from "./components/GameRoom";
 
-// En App.tsx
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-// Agregamos este log para que vos mismo veas en la consola si llega la URL o no
 console.log("Intentando conectar al backend en:", BACKEND_URL);
 
-// Forzamos a que use la URL. Si BACKEND_URL es undefined, socket.io fallará 
-// de forma más clara en lugar de intentar ir a Vercel.
 const socket: Socket = io(BACKEND_URL);
 
 export default function App() {
@@ -58,11 +54,18 @@ export default function App() {
     localStorage.removeItem("roomId");
     setGameState(null);
     setRoomId("");
-    window.location.reload(); // Simple way to reset socket state
+    window.location.reload();
   };
 
   if (!gameState) {
-    return <Lobby onJoin={handleJoinRoom} initialRoomId={roomId} initialPlayerName={playerName} />;
+    return (
+      <Lobby
+        onJoin={handleJoinRoom}
+        initialRoomId={roomId}
+        initialPlayerName={playerName}
+        socket={socket}
+      />
+    );
   }
 
   const currentPlayer = gameState.players.find((p) => p.id === socket.id);
