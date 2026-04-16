@@ -4,7 +4,7 @@ import { GameState, Player } from "./lib/gameLogic";
 import Lobby from "./components/Lobby";
 import GameRoom from "./components/GameRoom";
 
-const socket: Socket = io();
+const socket: Socket = io(import.meta.env.VITE_BACKEND_URL || "http://localhost:3000");
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);

@@ -10,11 +10,14 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "*",
+    // Aquí permitimos que tu URL de Vercel se conecte. 
+    // En desarrollo usará localhost:5173
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    methods: ["GET", "POST"]
   },
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // In-memory store for game states
 const games: Record<string, GameState> = {};
