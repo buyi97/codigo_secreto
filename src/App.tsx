@@ -4,7 +4,15 @@ import { GameState, Player } from "./lib/gameLogic";
 import Lobby from "./components/Lobby";
 import GameRoom from "./components/GameRoom";
 
-const socket: Socket = io(import.meta.env.VITE_BACKEND_URL);
+// En App.tsx
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+// Agregamos este log para que vos mismo veas en la consola si llega la URL o no
+console.log("Intentando conectar al backend en:", BACKEND_URL);
+
+// Forzamos a que use la URL. Si BACKEND_URL es undefined, socket.io fallará 
+// de forma más clara en lugar de intentar ir a Vercel.
+const socket: Socket = io(BACKEND_URL);
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
