@@ -1,18 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { io, Socket } from "socket.io-client";
-import { GameState, Player } from "./lib/gameLogic";
+import { GameState } from "./lib/gameLogic";
 import Lobby from "./components/Lobby";
 import GameRoom from "./components/GameRoom";
 
-// En App.tsx
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-
-// Agregamos este log para que vos mismo veas en la consola si llega la URL o no
-console.log("Intentando conectar al backend en:", BACKEND_URL);
-
-// Forzamos a que use la URL. Si BACKEND_URL es undefined, socket.io fallará 
-// de forma más clara en lugar de intentar ir a Vercel.
-const socket: Socket = io(BACKEND_URL);
+// Conexión única usando la variable de entorno
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const socket: Socket = io(BACKEND_URL, {
+  transports: ["websocket", "polling"]
+});
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -20,11 +16,13 @@ export default function App() {
   const [roomId, setRoomId] = useState(() => localStorage.getItem("roomId") || "");
 
   useEffect(() => {
+    // Escuchar actualizaciones del estado del juego
     socket.on("gameStateUpdate", (newGameState: GameState) => {
       setGameState(newGameState);
       localStorage.setItem("roomId", newGameState.roomId);
     });
 
+    // Escuchar actualizaciones del temporizador
     socket.on("timerUpdate", ({ roomId: updatedRoomId, timer, turn, isUltimatum }) => {
       setGameState((prev) => {
         if (prev && prev.roomId === updatedRoomId) {
@@ -34,7 +32,7 @@ export default function App() {
       });
     });
 
-    // Rejoin if we have a roomId
+    // Intentar reconexión automática si hay una sala guardada
     const savedRoomId = localStorage.getItem("roomId");
     const savedPlayerName = localStorage.getItem("playerName");
     if (savedRoomId && savedPlayerName) {
@@ -58,11 +56,18 @@ export default function App() {
     localStorage.removeItem("roomId");
     setGameState(null);
     setRoomId("");
-    window.location.reload(); // Simple way to reset socket state
+    window.location.reload(); 
   };
 
   if (!gameState) {
-    return <Lobby onJoin={handleJoinRoom} initialRoomId={roomId} initialPlayerName={playerName} />;
+    return (
+      <Lobby 
+        socket={socket} 
+        onJoin={handleJoinRoom} 
+        initialRoomId={roomId} 
+        initialPlayerName={playerName} 
+      />
+    );
   }
 
   const currentPlayer = gameState.players.find((p) => p.id === socket.id);
