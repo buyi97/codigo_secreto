@@ -78,7 +78,7 @@ const Card: React.FC<CardProps> = ({ card, isSpymaster, onClick, disabled }) => 
         card.revealed && "cursor-default overflow-hidden"
       )}
     >
-      {/* Word - Hidden when revealed (except for spymaster view or assassin) */}
+      {/* Word */}
       <span className={cn(
         "relative z-10 break-words line-clamp-2 leading-tight transition-opacity duration-300",
         card.revealed && card.team !== "assassin" && "opacity-0",

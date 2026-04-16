@@ -4,7 +4,7 @@ import { GameState, Player } from "./lib/gameLogic";
 import Lobby from "./components/Lobby";
 import GameRoom from "./components/GameRoom";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
 
 console.log("Intentando conectar al backend en:", BACKEND_URL);
 

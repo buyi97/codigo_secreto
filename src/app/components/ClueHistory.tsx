@@ -18,7 +18,7 @@ export default function ClueHistory({ clues }: ClueHistoryProps) {
     <div className="flex flex-col h-full overflow-hidden">
       <div className="flex items-center gap-2 mb-4">
         <History className="w-4 h-4 text-neutral-team" />
-        <h3 className="font-bold text-xs uppercase tracking-widest text-neutral-team">Historial</h3>
+        <h3 className="font-bold text-xs uppercase tracking-widest text-neutral-team">Historial de Pistas</h3>
       </div>
 
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">

@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --color-bg: #0b0f1a;
+  --color-card-bg: #161b2a;
+  --color-red-team: #FF4B4B;
+  --color-blue-team: #4B9FFF;
+  --color-neutral-team: #94a3b8;
+  --color-assassin-team: #020617;
+  --color-text-main: #f8fafc;
+  --color-glass: rgba(255, 255, 255, 0.03);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+}

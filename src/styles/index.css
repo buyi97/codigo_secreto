@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+body {
+  @apply bg-bg text-text-main antialiased overflow-hidden;
+  font-family: var(--font-sans);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-glass-border rounded-full hover:bg-white/20 transition-colors;
+}
+
+.glass-panel {
+  @apply bg-glass backdrop-blur-md border border-glass-border rounded-2xl;
+}
+
+/* Card Styles */
+.card-revealed-red {
+  @apply bg-red-team text-white border-red-400 shadow-[0_0_20px_rgba(255,75,75,0.5)] ring-2 ring-red-team/30;
+}
+
+.card-revealed-blue {
+  @apply bg-blue-team text-white border-blue-400 shadow-[0_0_20px_rgba(75,159,255,0.5)] ring-2 ring-blue-team/30;
+}
+
+.card-revealed-neutral {
+  @apply bg-[#e2e8f0] text-black border-[#94a3b8] shadow-inner;
+}
+
+.card-revealed-assassin {
+  @apply bg-[#000000] text-white border-white shadow-[0_0_40px_rgba(0,0,0,1)] ring-2 ring-white/40 relative;
+  isolation: isolate;
+}
+
+.card-revealed-assassin::before {
+  content: "";
+  @apply absolute inset-0 pointer-events-none;
+  z-index: -1;
+  opacity: 0.2;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 2a9 9 0 0 0-9 9c0 2.58 1.1 4.89 2.86 6.53L5 20a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-1h6v1a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1l-.86-2.47C19.9 15.89 21 13.58 21 11a9 9 0 0 0-9-9zm-3 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm6 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 55%;
+}
+
+/* Spymaster View - Unrevealed */
+.card-spymaster-red {
+  @apply bg-card-bg border-red-team border-2 text-white shadow-[inset_0_0_10px_rgba(255,75,75,0.2)];
+}
+
+.card-spymaster-blue {
+  @apply bg-card-bg border-blue-team border-2 text-white shadow-[inset_0_0_10px_rgba(75,159,255,0.2)];
+}
+
+.card-spymaster-neutral {
+  background-color: #52525b !important;
+  @apply border-neutral-team/40 border-2 text-white opacity-100 shadow-none backdrop-blur-none;
+  background-image: none !important;
+}
+
+.card-spymaster-assassin {
+  background-color: #000000 !important;
+  @apply border-white border-4 relative shadow-none;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  font-weight: 800;
+  isolation: isolate;
+  background-image: none !important;
+  backdrop-filter: none !important;
+}
+
+.card-spymaster-assassin::before {
+  content: "";
+  @apply absolute inset-0 pointer-events-none;
+  z-index: -1;
+  opacity: 0.4;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 2a9 9 0 0 0-9 9c0 2.58 1.1 4.89 2.86 6.53L5 20a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-1h6v1a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1l-.86-2.47C19.9 15.89 21 13.58 21 11a9 9 0 0 0-9-9zm-3 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm6 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 50%;
+}
+
+.card-hidden {
+  @apply bg-card-bg hover:bg-slate-700/50 border-glass-border border text-text-main shadow-md;
+}
