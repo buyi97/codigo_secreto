@@ -1,0 +1,115 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --color-bg: #0b0f1a;
+  --color-card-bg: #161b2a;
+  --color-red-team: #f43f5e;
+  --color-blue-team: #38bdf8;
+  --color-neutral-team: #94a3b8;
+  --color-assassin-team: #020617;
+  --color-text-main: #f8fafc;
+  --color-glass: rgba(255, 255, 255, 0.03);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-text-main antialiased overflow-hidden;
+    font-family: var(--font-sans);
+  }
+}
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-glass-border rounded-full hover:bg-white/20 transition-colors;
+  }
+  
+  .glass-panel {
+    @apply bg-glass backdrop-blur-md border border-glass-border rounded-2xl;
+  }
+
+  /* --- SECCIÓN DE ESTILOS DE TARJETAS (MODIFICAR AQUÍ) --- */
+  
+  /* Tarjetas Reveladas */
+  .card-revealed-red {
+    @apply bg-red-team text-white border-red-400 shadow-[0_0_20px_rgba(244,63,94,0.5)] ring-2 ring-red-team/30;
+  }
+  .card-revealed-blue {
+    @apply bg-blue-team text-white border-blue-400 shadow-[0_0_20px_rgba(56,189,248,0.5)] ring-2 ring-blue-team/30;
+  }
+  .card-revealed-neutral {
+    @apply bg-[#e2e8f0] text-black border-[#94a3b8] shadow-inner;
+  }
+  .card-revealed-assassin {
+    @apply bg-[#000000] text-white border-white shadow-[0_0_40px_rgba(0,0,0,1)] ring-2 ring-white/40 relative;
+    isolation: isolate;
+  }
+  .card-revealed-assassin::before {
+    content: "";
+    @apply absolute inset-0 pointer-events-none;
+    z-index: -1;
+    opacity: 0.2;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 2a9 9 0 0 0-9 9c0 2.58 1.1 4.89 2.86 6.53L5 20a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-1h6v1a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1l-.86-2.47C19.9 15.89 21 13.58 21 11a9 9 0 0 0-9-9zm-3 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm6 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 55%;
+  }
+  
+  /* Vista del Líder (Spymaster) - No reveladas */
+  .card-spymaster-red {
+    @apply bg-card-bg border-red-team border-2 text-white shadow-[inset_0_0_10px_rgba(244,63,94,0.2)];
+  }
+  .card-spymaster-blue {
+    @apply bg-card-bg border-blue-team border-2 text-white shadow-[inset_0_0_10px_rgba(56,189,248,0.2)];
+  }
+/* 1. Neutral: Fondo gris plano (neutral) y letras blancas */
+  .card-spymaster-neutral {
+    /* Cambiamos slate-700 por neutral-600 para un gris real */
+    /* Añadimos backdrop-blur-none para quitar cualquier efecto de transparencia previo */
+    @apply bg-neutral-600 border-neutral-team/40 border-2 text-white opacity-100 shadow-none backdrop-blur-none;
+    
+    /* Forzamos que no haya gradientes ni transparencias */
+    background-image: none !important;
+  }
+
+/* 2. Assassin: Negro absoluto, contraste máximo y calavera */
+ .card-spymaster-assassin {
+    /* bg-black es #000000, pero añadimos !important para evitar herencias de .glass-panel */
+    background-color: #000000 !important;
+    @apply border-white border-4 relative shadow-none;
+    
+    /* Forzamos texto blanco puro, opacidad 100% y un peso de fuente mayor para el contraste */
+    color: #ffffff !important;
+    opacity: 1 !important;
+    font-weight: 800; /* Letras más potentes */
+    
+    /* Crea el contexto para que el z-index -1 funcione */
+    isolation: isolate; 
+    background-image: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .card-spymaster-assassin::before {
+    content: "";
+    @apply absolute inset-0 pointer-events-none;
+    z-index: -1; 
+    opacity: 0.4; /* Calavera sutil al 40% */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 2a9 9 0 0 0-9 9c0 2.58 1.1 4.89 2.86 6.53L5 20a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-1h6v1a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1l-.86-2.47C19.9 15.89 21 13.58 21 11a9 9 0 0 0-9-9zm-3 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm6 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 50%;
+  }
+  
+  /* Tarjeta por defecto (Oculta) */
+  .card-hidden {
+    @apply bg-card-bg hover:bg-slate-700/50 border-glass-border border text-text-main shadow-md;
+  }
+}

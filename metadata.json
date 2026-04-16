@@ -1,0 +1,6 @@
+{
+  "name": "Código Secreto Online",
+  "description": "Juego de mesa multijugador en tiempo real basado en Codenames. Divide a tus amigos en equipos, elige a tus Spymasters y descubre a todos tus agentes antes que el rival.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
