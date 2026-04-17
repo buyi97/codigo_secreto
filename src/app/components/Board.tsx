@@ -18,7 +18,7 @@ interface BoardProps {
 
 export default function Board({ cards, isSpymaster, onCardClick, canClick }: BoardProps) {
   return (
-    // Sin aspect-ratio. 100% de ancho y alto, estirando las cartas para que entren perfectamente.
+    // Sin aspect-ratio estricto. grid-rows-5 hace que flexione usando la altura disponible.
     <div className="grid grid-cols-5 grid-rows-5 gap-1.5 md:gap-2 lg:gap-3 w-full h-full min-h-0">
       {cards.map((card) => (
         <Card 
@@ -67,12 +67,12 @@ const Card: React.FC<CardProps> = ({ card, isSpymaster, onClick, disabled }) => 
 
   return (
     <motion.button
-      whileHover={!disabled ? { scale: 1.02, zIndex: 10 } : {}}
+      whileHover={!disabled ? { scale: 1.03, zIndex: 10 } : {}}
       whileTap={!disabled ? { scale: 0.95 } : {}}
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "relative w-full h-full min-h-0 rounded-md lg:rounded-xl p-1 lg:p-2 flex items-center justify-center text-center transition-all duration-200 overflow-hidden shadow-sm border border-white/5",
+        "relative w-full h-full min-h-0 rounded-md md:rounded-xl p-1 md:p-2 flex items-center justify-center text-center transition-all duration-200 overflow-hidden shadow-sm border border-white/5",
         getTeamStyles(card.team, card.revealed, isSpymaster),
         !disabled && !card.revealed && "cursor-pointer active:scale-95 hover:shadow-primary/30",
         disabled && !card.revealed && "cursor-not-allowed opacity-90",
@@ -82,12 +82,13 @@ const Card: React.FC<CardProps> = ({ card, isSpymaster, onClick, disabled }) => 
       <span 
         className={cn(
           "relative z-10 w-full px-0.5 leading-[1.1] sm:leading-none transition-all duration-300",
-          "font-black uppercase tracking-tight md:tracking-tighter hyphens-auto",
+          "font-black uppercase tracking-tight md:tracking-tighter break-words hyphens-auto",
           card.revealed && card.team !== "assassin" && "opacity-0",
           card.revealed && card.team === "assassin" && "text-white font-black text-shadow-lg scale-110"
         )}
         style={{ 
-          fontSize: "clamp(0.55rem, 1vw + 1vh, 1.4rem)", 
+          // Matemáticas para clamp: tamaño súper seguro en mobile (0.5rem), ideal para tablet y max en PC
+          fontSize: "clamp(0.5rem, 1.5vw + 1.2vh, 1.5rem)", 
           wordBreak: "break-word" 
         }}
       >
@@ -96,12 +97,12 @@ const Card: React.FC<CardProps> = ({ card, isSpymaster, onClick, disabled }) => 
       
       {isSpymaster && !card.revealed && (
         <div className={cn(
-          "absolute top-1 right-1 md:top-2 md:right-2 w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-full flex items-center justify-center z-20",
+          "absolute top-1 right-1 md:top-2 md:right-2 w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-3 md:h-3 rounded-full flex items-center justify-center z-20",
           card.team === "red" ? "bg-[#FF4B4B] shadow-[0_0_10px_rgba(255,75,75,0.7)]" : 
           card.team === "blue" ? "bg-[#4B9FFF] shadow-[0_0_10px_rgba(75,159,255,0.7)]" : 
-          card.team === "neutral" ? "bg-[#94a3b8] shadow-[0_0_5px_rgba(148,163,184,0.5)]" : "bg-white shadow-[0_0_15px_rgba(255,255,255,0.9)]"
+          card.team === "neutral" ? "bg-[#94a3b8]" : "bg-white shadow-[0_0_15px_rgba(255,255,255,0.9)]"
         )}>
-          {card.team === "assassin" && <Skull className="w-[8px] h-[8px] sm:w-2 sm:h-2 md:w-2.5 md:h-2.5 text-black" />}
+          {card.team === "assassin" && <Skull className="w-[6px] h-[6px] sm:w-[10px] sm:h-[10px] md:w-2.5 md:h-2.5 text-black" />}
         </div>
       )}
     </motion.button>
