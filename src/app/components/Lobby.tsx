@@ -54,7 +54,9 @@ export default function Lobby({ onJoin, initialRoomId, initialPlayerName, socket
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-6 bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#0a0a0a] relative overflow-hidden">
+    // MAGIA RESPONSIVE: overflow-x-hidden overflow-y-auto en lugar de overflow-hidden
+    // Además agregamos py-8 para darle aire arriba y abajo cuando hay scroll.
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-start lg:justify-center p-4 py-8 md:p-6 bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#0a0a0a] relative overflow-x-hidden overflow-y-auto custom-scrollbar">
       {/* Animated background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div 
@@ -78,7 +80,8 @@ export default function Lobby({ onJoin, initialRoomId, initialPlayerName, socket
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-6xl z-10 flex flex-col lg:flex-row items-center justify-center gap-12"
+        // my-auto y shrink-0 aseguran que quede centrado si hay espacio, pero no se rompa si falta
+        className="w-full max-w-6xl z-10 flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-12 my-auto shrink-0"
       >
         {/* Left side - Branding */}
         <div className="text-center lg:text-left lg:flex-1 space-y-6">
@@ -131,6 +134,7 @@ export default function Lobby({ onJoin, initialRoomId, initialPlayerName, socket
             {/* Mode Toggle */}
             <div className="flex gap-2 mb-6 p-1 bg-black/30 rounded-xl border border-white/10">
               <button 
+                type="button"
                 onClick={() => setMode("join")}
                 className={cn(
                   "flex-1 py-3 rounded-lg text-xs font-bold uppercase tracking-widest transition-all",
@@ -142,6 +146,7 @@ export default function Lobby({ onJoin, initialRoomId, initialPlayerName, socket
                 Unirse
               </button>
               <button 
+                type="button"
                 onClick={() => setMode("create")}
                 className={cn(
                   "flex-1 py-3 rounded-lg text-xs font-bold uppercase tracking-widest transition-all",
@@ -225,23 +230,23 @@ export default function Lobby({ onJoin, initialRoomId, initialPlayerName, socket
               {/* Public checkbox (Create mode) */}
               {mode === "create" && (
                 <div className="flex items-center gap-3 p-4 bg-black/30 rounded-xl border border-white/10">
-                  <div className="relative">
+                  <div className="relative flex items-center justify-center">
                     <input 
                       type="checkbox" 
                       id="isPublic"
                       checked={isPublic}
                       onChange={(e) => setIsPublic(e.target.checked)}
-                      className="peer w-5 h-5 rounded border-2 border-white/20 bg-transparent checked:bg-[#4B9FFF] checked:border-[#4B9FFF] appearance-none cursor-pointer transition-all"
+                      className="peer w-5 h-5 rounded border-2 border-white/20 bg-transparent checked:bg-[#4B9FFF] checked:border-[#4B9FFF] appearance-none cursor-pointer transition-all shrink-0 m-0"
                     />
                     <svg 
-                      className="absolute top-0.5 left-0.5 w-4 h-4 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity"
+                      className="absolute w-3 h-3 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity"
                       viewBox="0 0 20 20"
                       fill="currentColor"
                     >
                       <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
                     </svg>
                   </div>
-                  <label htmlFor="isPublic" className="flex items-center gap-2 text-sm font-bold text-white cursor-pointer">
+                  <label htmlFor="isPublic" className="flex items-center gap-2 text-sm font-bold text-white cursor-pointer select-none">
                     <Globe className="w-4 h-4 text-neutral-team" />
                     Sala Pública
                   </label>
@@ -253,7 +258,7 @@ export default function Lobby({ onJoin, initialRoomId, initialPlayerName, socket
                 type="submit"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full bg-gradient-to-r from-[#FF4B4B] to-[#4B9FFF] text-white py-4 rounded-xl font-black uppercase tracking-widest text-sm hover:shadow-lg hover:shadow-[#FF4B4B]/20 transition-all"
+                className="w-full bg-gradient-to-r from-[#FF4B4B] to-[#4B9FFF] text-white py-4 rounded-xl font-black uppercase tracking-widest text-sm hover:shadow-lg hover:shadow-[#FF4B4B]/20 transition-all mt-2"
               >
                 {mode === "join" ? "Iniciar Misión" : "Establecer Cuartel"}
               </motion.button>
