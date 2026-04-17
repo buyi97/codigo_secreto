@@ -18,8 +18,8 @@ interface BoardProps {
 
 export default function Board({ cards, isSpymaster, onCardClick, canClick }: BoardProps) {
   return (
-    // grid-rows-5 fuerza a que todo entre en 5 filas tomando el 100% de altura.
-    <div className="grid grid-cols-5 grid-rows-5 gap-1.5 md:gap-2.5 w-full h-full min-h-0">
+    // LA CLAVE MAGICA: grid-rows-5 hace que el tablero llene el 100% de alto sin scrollear
+    <div className="grid grid-cols-5 grid-rows-5 gap-1 md:gap-2 w-full h-full min-h-0">
       {cards.map((card) => (
         <Card 
           key={card.id} 
@@ -67,12 +67,12 @@ const Card: React.FC<CardProps> = ({ card, isSpymaster, onClick, disabled }) => 
 
   return (
     <motion.button
-      whileHover={!disabled ? { scale: 1.03, zIndex: 10 } : {}}
+      whileHover={!disabled ? { scale: 1.02, zIndex: 10 } : {}}
       whileTap={!disabled ? { scale: 0.95 } : {}}
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "relative w-full h-full min-h-0 rounded-md md:rounded-xl p-1 md:p-2 flex items-center justify-center text-center transition-all duration-200 overflow-hidden shadow-sm border border-white/5",
+        "relative w-full h-full min-h-0 rounded-md md:rounded-xl p-0.5 md:p-1.5 flex items-center justify-center text-center transition-all duration-200 overflow-hidden shadow-sm border border-white/5",
         getTeamStyles(card.team, card.revealed, isSpymaster),
         !disabled && !card.revealed && "cursor-pointer active:scale-95 hover:shadow-primary/30",
         disabled && !card.revealed && "cursor-not-allowed opacity-90",
@@ -81,14 +81,14 @@ const Card: React.FC<CardProps> = ({ card, isSpymaster, onClick, disabled }) => 
     >
       <span 
         className={cn(
-          "relative z-10 w-full leading-[1.1] sm:leading-none transition-all duration-300",
-          "font-black uppercase tracking-tight md:tracking-tighter break-words hyphens-auto",
+          "relative z-10 w-full leading-[1.1] sm:leading-none transition-all duration-300 px-0.5",
+          "font-black uppercase tracking-tight md:tracking-tighter hyphens-auto",
           card.revealed && card.team !== "assassin" && "opacity-0",
           card.revealed && card.team === "assassin" && "text-white font-black text-shadow-lg scale-110"
         )}
-        // El tamaño de la fuente se adapta con clamp para no romper nada
         style={{ 
-          fontSize: "clamp(0.65rem, 1.2vw + 0.8vh, 1.5rem)", 
+          // Ajusta dinámicamente el tamaño de la fuente para que siempre entre la letra
+          fontSize: "clamp(0.55rem, 1vw + 1vh, 1.25rem)", 
           wordBreak: "break-word" 
         }}
       >
@@ -102,7 +102,7 @@ const Card: React.FC<CardProps> = ({ card, isSpymaster, onClick, disabled }) => 
           card.team === "blue" ? "bg-[#4B9FFF] shadow-[0_0_10px_rgba(75,159,255,0.7)]" : 
           card.team === "neutral" ? "bg-[#94a3b8] shadow-[0_0_5px_rgba(148,163,184,0.5)]" : "bg-white shadow-[0_0_15px_rgba(255,255,255,0.9)]"
         )}>
-          {card.team === "assassin" && <Skull className="w-[10px] h-[10px] sm:w-3 sm:h-3 text-black" />}
+          {card.team === "assassin" && <Skull className="w-[8px] h-[8px] sm:w-2 sm:h-2 md:w-2.5 md:h-2.5 text-black" />}
         </div>
       )}
     </motion.button>
