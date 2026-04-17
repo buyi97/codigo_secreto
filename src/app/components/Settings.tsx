@@ -17,7 +17,6 @@ interface SettingsProps {
 }
 
 export default function Settings({ config, onUpdate, onClose, isHost }: SettingsProps) {
-  // Aseguramos que siempre haya valores por defecto
   const [localConfig, setLocalConfig] = useState({
     ...config,
     customWords: config.customWords || [],
@@ -30,13 +29,12 @@ export default function Settings({ config, onUpdate, onClose, isHost }: Settings
   };
 
   const handleWordsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    // Separa por comas o saltos de línea y quita espacios
     const text = e.target.value;
-    const wordsArray = text.split(/[,\n]+/).map(w => w.trim()).filter(w => w.length > 0);
+    // Dividimos por coma o salto de línea de forma segura
+    const wordsArray = text.split(/,|\n/).map(w => w.trim()).filter(w => w.length > 0);
     setLocalConfig({ ...localConfig, customWords: wordsArray });
   };
 
-  // Validación visual del mínimo de palabras
   const isMissingWords = localConfig.wordBankMode === "replace" && localConfig.customWords.length < 25;
 
   return (
@@ -142,7 +140,7 @@ export default function Settings({ config, onUpdate, onClose, isHost }: Settings
           </div>
         </div>
 
-        {/* First Turn Duration */}
+        {/* First Turn Duration (Condicional) */}
         {localConfig.firstTurnMode === "timed" && (
           <div className="space-y-2">
             <label className="text-sm font-bold uppercase tracking-wider text-neutral-team">
@@ -157,7 +155,7 @@ export default function Settings({ config, onUpdate, onClose, isHost }: Settings
               className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#4B9FFF] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
-        </div>
+        )}
 
         {/* Limit Guesses */}
         <div className="flex items-center justify-between p-4 bg-black/30 rounded-xl border border-white/10">
@@ -166,7 +164,7 @@ export default function Settings({ config, onUpdate, onClose, isHost }: Settings
               Limitar Adivinanzas (n+1)
             </label>
             <p className="text-xs text-neutral-team mt-1">
-              Los jugadores solo pueden adivinar el número de la pista + 1
+              Solo adivinan el número de la pista + 1
             </p>
           </div>
           <div className="relative">
@@ -181,6 +179,22 @@ export default function Settings({ config, onUpdate, onClose, isHost }: Settings
               <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
             </svg>
           </div>
+        </div>
+        
+        {/* Max Players */}
+        <div className="space-y-2">
+          <label className="text-sm font-bold uppercase tracking-wider text-neutral-team flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Máximo de Jugadores
+          </label>
+          <input
+            type="number"
+            value={localConfig.maxPlayers}
+            onChange={(e) => setLocalConfig({ ...localConfig, maxPlayers: parseInt(e.target.value) || 10 })}
+            disabled={!isHost}
+            min={2} max={20}
+            className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#4B9FFF] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          />
         </div>
       </div>
 
