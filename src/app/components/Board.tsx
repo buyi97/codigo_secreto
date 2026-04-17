@@ -18,8 +18,8 @@ interface BoardProps {
 
 export default function Board({ cards, isSpymaster, onCardClick, canClick }: BoardProps) {
   return (
-    // LA CLAVE MAGICA: grid-rows-5 hace que el tablero llene el 100% de alto sin scrollear
-    <div className="grid grid-cols-5 grid-rows-5 gap-1 md:gap-2 w-full h-full min-h-0">
+    // Sin aspect-ratio. 100% de ancho y alto, estirando las cartas para que entren perfectamente.
+    <div className="grid grid-cols-5 grid-rows-5 gap-1.5 md:gap-2 lg:gap-3 w-full h-full min-h-0">
       {cards.map((card) => (
         <Card 
           key={card.id} 
@@ -72,7 +72,7 @@ const Card: React.FC<CardProps> = ({ card, isSpymaster, onClick, disabled }) => 
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "relative w-full h-full min-h-0 rounded-md md:rounded-xl p-0.5 md:p-1.5 flex items-center justify-center text-center transition-all duration-200 overflow-hidden shadow-sm border border-white/5",
+        "relative w-full h-full min-h-0 rounded-md lg:rounded-xl p-1 lg:p-2 flex items-center justify-center text-center transition-all duration-200 overflow-hidden shadow-sm border border-white/5",
         getTeamStyles(card.team, card.revealed, isSpymaster),
         !disabled && !card.revealed && "cursor-pointer active:scale-95 hover:shadow-primary/30",
         disabled && !card.revealed && "cursor-not-allowed opacity-90",
@@ -81,14 +81,13 @@ const Card: React.FC<CardProps> = ({ card, isSpymaster, onClick, disabled }) => 
     >
       <span 
         className={cn(
-          "relative z-10 w-full leading-[1.1] sm:leading-none transition-all duration-300 px-0.5",
+          "relative z-10 w-full px-0.5 leading-[1.1] sm:leading-none transition-all duration-300",
           "font-black uppercase tracking-tight md:tracking-tighter hyphens-auto",
           card.revealed && card.team !== "assassin" && "opacity-0",
           card.revealed && card.team === "assassin" && "text-white font-black text-shadow-lg scale-110"
         )}
         style={{ 
-          // Ajusta dinámicamente el tamaño de la fuente para que siempre entre la letra
-          fontSize: "clamp(0.55rem, 1vw + 1vh, 1.25rem)", 
+          fontSize: "clamp(0.55rem, 1vw + 1vh, 1.4rem)", 
           wordBreak: "break-word" 
         }}
       >
