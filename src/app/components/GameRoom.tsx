@@ -6,7 +6,7 @@ import Controls from "./Controls";
 import ClueInput from "./ClueInput";
 import ClueHistory from "./ClueHistory";
 import Settings from "./Settings";
-import { LogOut, Trophy, Clock, Users, Copy, Check, Power, X, RotateCcw } from "lucide-react";
+import { LogOut, Trophy, Users, Copy, Check, Power, X, RotateCcw, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -27,6 +27,7 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
   const [showTerminateConfirm, setShowTerminateConfirm] = React.useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = React.useState(false);
   const [showTeamsPanel, setShowTeamsPanel] = React.useState(false);
+  const [showHistoryMobile, setShowHistoryMobile] = React.useState(false); // NUEVO: Control del panel en mobile
 
   const handleSelectTeam = (team: PlayerTeam) => {
     if (gameState.status === "playing") return;
@@ -40,13 +41,10 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
 
   const handleStartGame = () => {
     if (gameState.status === "playing") return;
-    
-    // Validación: Bloquear si se eligió Nuevo Banco y no tiene 25 palabras
     if (gameState.config.wordBankMode === "replace" && (gameState.config.customWords?.length || 0) < 25) {
       alert("⚠️ Has seleccionado usar un Nuevo Banco de Palabras, pero no tienes el mínimo de 25 palabras necesarias.");
       return;
     }
-
     if (gameState.players.length > 1) {
       const redSpymaster = gameState.players.find(p => p.team === "red" && p.role === "spymaster");
       const blueSpymaster = gameState.players.find(p => p.team === "blue" && p.role === "spymaster");
@@ -55,8 +53,6 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
         return;
       }
     }
-    
-    // ESTE ERA EL BUG: El servidor esperaba un string directo
     socket.emit("startGame", gameState.roomId);
   };
 
@@ -103,6 +99,7 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Cálculos de estado
   const history = gameState.history || { red: 0, blue: 0 };
   const redWins = history.red;
   const blueWins = history.blue;
@@ -125,24 +122,29 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
   const isHost = currentPlayer?.isHost;
   const isCriticalTime = gameState.status === "playing" && gameState.timer > 0 && gameState.timer <= 10 && !gameState.isUltimatum;
 
+  // Textos súper claros para el estado del turno
+  const turnPhase = gameState.currentClue ? "ELECCIÓN" : "PISTA";
+  const turnTeamName = gameState.turn === "red" ? "ROJO" : "AZUL";
+  const turnTeamColor = gameState.turn === "red" ? "text-[#FF4B4B]" : "text-[#4B9FFF]";
+
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-bg relative">
+    <div className="flex flex-col h-[100dvh] overflow-hidden bg-bg relative">
       
-      {/* HEADER GLOBAL */}
+      {/* ================= HEADER GLOBAL ================= */}
       <header className="h-16 md:h-20 px-2 md:px-6 flex items-center justify-between bg-black/80 border-b border-white/10 shrink-0 z-20 backdrop-blur-2xl shadow-lg">
         
-        {/* Historial y Room ID (Visible siempre en PC y Mobile) */}
+        {/* IZQUIERDA: Historial y Room ID */}
         <div className="flex items-center gap-2 md:gap-4 shrink-0">
-          <div className="flex flex-col md:flex-row items-center md:gap-2 bg-white/5 px-3 py-1 md:py-2 rounded-xl border border-white/10">
+          <div className="flex flex-col md:flex-row items-center md:gap-2 bg-white/5 px-2 md:px-3 py-1 md:py-2 rounded-xl border border-white/10">
             <span className="text-[8px] md:text-[11px] uppercase tracking-widest text-neutral-team font-black">Historial</span>
-            <div className="flex items-center gap-2 leading-none">
+            <div className="flex items-center gap-1.5 md:gap-2 leading-none">
               <span className={cn("font-black transition-all", redWins > blueWins ? "text-lg md:text-2xl text-[#FF4B4B]" : "text-sm md:text-lg text-[#FF4B4B]/70")}>{redWins}</span>
               <span className="text-white/20 text-xs">-</span>
               <span className={cn("font-black transition-all", blueWins > redWins ? "text-lg md:text-2xl text-[#4B9FFF]" : "text-sm md:text-lg text-[#4B9FFF]/70")}>{blueWins}</span>
             </div>
           </div>
           
-          <div className="flex items-center gap-1.5 md:gap-2 bg-black/50 text-white px-2 md:px-3 py-1.5 md:py-2 rounded-xl border border-white/10">
+          <div className="flex items-center gap-1 md:gap-2 bg-black/50 text-white px-2 md:px-3 py-1.5 md:py-2 rounded-xl border border-white/10">
             <span className="hidden sm:inline text-[10px] text-neutral-team uppercase font-bold">Sala:</span>
             <span className="font-mono text-xs md:text-sm font-bold text-primary">{gameState.roomId}</span>
             <button onClick={copyRoomLink} className="p-1 hover:bg-white/10 rounded transition-colors">
@@ -153,14 +155,17 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
 
         {/* CENTRO: Marcadores y Timer */}
         {gameState.status !== "lobby" && (
-          <div className="flex flex-col md:flex-row items-center gap-1 md:gap-6 absolute left-1/2 -translate-x-1/2 z-0">
-            <div className="flex items-center gap-1 md:gap-2 bg-bg/80 px-2 py-1 rounded-xl backdrop-blur-md">
-              <div className="flex items-baseline gap-1 px-2 md:px-3 py-1 md:py-1.5 rounded-lg bg-[#FF4B4B]/10 border border-[#FF4B4B]/30">
+          <div className="flex flex-col items-center gap-0.5 md:gap-1 absolute left-1/2 -translate-x-1/2 z-0">
+            <div className="flex items-center gap-1 md:gap-2 bg-bg/80 px-1.5 md:px-2 py-1 rounded-xl backdrop-blur-md border border-white/5 shadow-md">
+              {/* Equipo Rojo (Faltantes / Total) */}
+              <div className="flex items-baseline gap-0.5 md:gap-1 px-2 md:px-3 py-1 md:py-1.5 rounded-lg bg-[#FF4B4B]/10 border border-[#FF4B4B]/30">
                 <span className="text-sm md:text-xl font-black text-[#FF4B4B] leading-none">{redRemaining}</span>
+                <span className="text-[9px] md:text-xs font-bold text-[#FF4B4B]/60 leading-none">/{redTotal}</span>
               </div>
               
+              {/* Timer */}
               <div className={cn(
-                "flex items-center justify-center min-w-[50px] md:min-w-[80px] py-1 md:py-1.5 rounded-lg border transition-all",
+                "flex items-center justify-center min-w-[45px] md:min-w-[80px] py-1 md:py-1.5 rounded-lg border transition-all",
                 gameState.isUltimatum ? "bg-[#FF4B4B]/30 border-[#FF4B4B] animate-pulse shadow-[0_0_15px_rgba(255,75,75,0.5)]" : 
                 (isCriticalTime ? "bg-[#FF4B4B]/80 border-[#FF4B4B] shadow-[0_0_20px_rgba(255,75,75,0.8)]" : "bg-black/40 border-white/10")
               )}>
@@ -172,27 +177,30 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
                 </span>
               </div>
 
-              <div className="flex items-baseline gap-1 px-2 md:px-3 py-1 md:py-1.5 rounded-lg bg-[#4B9FFF]/10 border border-[#4B9FFF]/30">
+              {/* Equipo Azul (Faltantes / Total) */}
+              <div className="flex items-baseline gap-0.5 md:gap-1 px-2 md:px-3 py-1 md:py-1.5 rounded-lg bg-[#4B9FFF]/10 border border-[#4B9FFF]/30">
                 <span className="text-sm md:text-xl font-black text-[#4B9FFF] leading-none">{blueRemaining}</span>
+                <span className="text-[9px] md:text-xs font-bold text-[#4B9FFF]/60 leading-none">/{blueTotal}</span>
               </div>
             </div>
 
-            <div className="hidden lg:block text-xs md:text-sm font-bold uppercase tracking-wider">
+            {/* Turno Explícito (Visible siempre) */}
+            <div className="text-[9px] md:text-sm font-black uppercase tracking-widest whitespace-nowrap">
               {gameState.status === "finished" ? (
                 <span className="text-green-400">Misión Finalizada</span>
               ) : (
-                <>Turno <span className={gameState.turn === "red" ? "text-[#FF4B4B]" : "text-[#4B9FFF]"}>{gameState.turn === "red" ? "Rojo" : "Azul"}</span></>
+                <span>TURNO {turnPhase} <span className={turnTeamColor}>{turnTeamName}</span></span>
               )}
             </div>
           </div>
         )}
 
-        {/* DERECHA: Salir */}
+        {/* DERECHA: Salir y Teams */}
         <div className="flex items-center gap-1 md:gap-3 shrink-0">
           {gameState.status === "playing" && (
              <button 
                onClick={() => setShowTeamsPanel(true)}
-               className="p-2 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white transition-all flex items-center gap-2"
+               className="p-1.5 md:p-2.5 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white transition-all shadow-lg flex items-center gap-2"
              >
                <Users className="w-4 h-4 md:w-5 md:h-5" />
                <span className="hidden xl:inline text-sm font-bold">Equipos</span>
@@ -201,155 +209,153 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
           
           <button 
             onClick={() => setShowLeaveConfirm(true)}
-            className="p-2 md:p-2.5 hover:bg-[#FF4B4B]/20 rounded-xl transition-colors border border-white/20 backdrop-blur-md group"
+            className="p-1.5 md:p-2.5 hover:bg-[#FF4B4B]/20 rounded-xl transition-colors border border-white/20 backdrop-blur-md group"
           >
             <LogOut className="w-4 h-4 md:w-5 md:h-5 text-neutral-team group-hover:text-[#FF4B4B]" />
           </button>
         </div>
       </header>
 
-      {/* ÁREA PRINCIPAL */}
+      {/* ================= ÁREA PRINCIPAL ================= */}
       <main className="flex-1 flex overflow-hidden">
         
-        {/* ================= ESTADO: LOBBY ================= */}
+        {/* --- LOBBY --- */}
         {gameState.status === "lobby" && (
-          // MAGIA RESPONSIVE: Scroll global y apilado en vertical para celulares
           <div className="flex-1 overflow-y-auto p-3 md:p-8 custom-scrollbar">
             <div className="max-w-7xl mx-auto w-full flex flex-col xl:grid xl:grid-cols-2 gap-4 md:gap-8 items-start">
-              
-              {/* Panel Izquierdo: Equipos (Ajustado alto para mobile) */}
+              {/* Panel Izquierdo: Equipos */}
               <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-4 md:p-6 shadow-2xl flex flex-col w-full h-[500px] xl:h-[calc(100vh-140px)]">
                  <div className="flex items-center justify-between mb-4 md:mb-6 shrink-0">
                     <h2 className="text-xl md:text-2xl font-black uppercase text-white flex items-center gap-2">
                       <Users className="text-primary" /> Agentes
                     </h2>
                  </div>
-                 
                  <div className="flex-1 overflow-hidden">
-                   <Controls 
-                     players={gameState.players} currentPlayer={currentPlayer}
-                     onSelectTeam={handleSelectTeam} onSelectRole={handleSelectRole}
-                     onStartGame={handleStartGame} onMovePlayer={handleMovePlayer}
-                     gameStatus={gameState.status} maxPlayers={gameState.config.maxPlayers}
-                   />
+                   <Controls players={gameState.players} currentPlayer={currentPlayer} onSelectTeam={handleSelectTeam} onSelectRole={handleSelectRole} onStartGame={handleStartGame} onMovePlayer={handleMovePlayer} gameStatus={gameState.status} maxPlayers={gameState.config.maxPlayers} />
                  </div>
-
                  {isHost && (
-                   <button 
-                     onClick={handleStartGame}
-                     className="mt-4 w-full py-4 bg-gradient-to-r from-primary to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-black text-lg md:text-xl rounded-xl shadow-[0_0_20px_rgba(75,159,255,0.4)] transform hover:scale-[1.02] transition-all shrink-0"
-                   >
+                   <button onClick={handleStartGame} className="mt-4 w-full py-4 bg-gradient-to-r from-primary to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-black text-lg md:text-xl rounded-xl shadow-[0_0_20px_rgba(75,159,255,0.4)] transform hover:scale-[1.02] transition-all shrink-0">
                      INICIAR PARTIDA
                    </button>
                  )}
               </div>
 
-              {/* Panel Derecho: Ajustes Completos (Ajustado alto para mobile) */}
+              {/* Panel Derecho: Ajustes */}
               <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-4 md:p-6 shadow-2xl w-full min-h-[600px] xl:h-[calc(100vh-140px)] flex flex-col">
-                 <Settings 
-                    config={gameState.config}
-                    onUpdate={handleUpdateConfig}
-                    onClose={() => {}} 
-                    isHost={isHost || false}
-                 />
+                 <Settings config={gameState.config} onUpdate={handleUpdateConfig} onClose={() => {}} isHost={isHost || false} />
               </div>
-
             </div>
           </div>
         )}
 
-        {/* ================= ESTADO: JUGANDO o FINALIZADO ================= */}
+        {/* --- JUEGO ACTIVO O FINALIZADO --- */}
         {gameState.status !== "lobby" && (
-          <div className="flex-1 flex flex-col lg:flex-row min-h-0 min-w-0">
+          <div className="flex-1 flex flex-col lg:flex-row min-h-0 min-w-0 relative">
              
-             {/* Panel Central: Tablero */}
-             <div className="flex-1 flex flex-col p-2 md:p-6 overflow-hidden relative">
-               <div className={cn(
-                 "flex-1 flex items-center justify-center transition-opacity duration-700",
-                 gameState.status === "finished" ? "opacity-40 pointer-events-none grayscale-[30%]" : "opacity-100"
-               )}>
-                 <div className="w-full max-w-5xl max-h-full aspect-[4/5] sm:aspect-square flex items-center justify-center p-2">
-                   <Board 
-                     cards={gameState.cards} 
-                     isSpymaster={effectiveIsSpymaster} 
-                     onCardClick={handleCardClick}
-                     canClick={canClick}
-                   />
-                 </div>
-               </div>
+             {/* COLUMNA CENTRAL: Tablero + Botones Fijos */}
+             <div className="flex-1 flex flex-col min-w-0 min-h-0 relative">
+                
+                {/* Zona del Tablero (Scrolleable si es muy necesario, pero prioriza encajar) */}
+                <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 md:p-6 flex flex-col custom-scrollbar pb-32 lg:pb-6">
+                   <div className="w-full max-w-5xl mx-auto my-auto flex items-center justify-center">
+                     <Board cards={gameState.cards} isSpymaster={effectiveIsSpymaster} onCardClick={handleCardClick} canClick={canClick} />
+                   </div>
+                </div>
 
-               {/* Footer In-Game */}
-               {gameState.status === "playing" && (
-                 <div className="shrink-0 mt-2 md:mt-4 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4">
-                   {isHost && (
-                     <button 
-                       onClick={() => setShowTerminateConfirm(true)}
-                       className="px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-bold bg-[#FF4B4B]/10 text-[#FF4B4B] border border-[#FF4B4B]/30 hover:bg-[#FF4B4B]/20 transition-all flex items-center gap-2"
-                     >
-                       <Power className="w-4 h-4" /> Terminar
-                     </button>
-                   )}
+                {/* BANNER FLOTANTE DE VICTORIA (Post-Partida) */}
+                {gameState.status === "finished" && (
+                   <div className="absolute inset-x-0 bottom-0 shrink-0 p-4 md:p-6 bg-black/90 backdrop-blur-2xl border-t border-white/20 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 shadow-[0_-10px_50px_rgba(0,0,0,0.8)] z-20">
+                      <div className="flex items-center gap-4">
+                         <Trophy className={cn("w-10 h-10", gameState.winner === "red" ? "text-[#FF4B4B]" : "text-[#4B9FFF]")} />
+                         <div>
+                           <h2 className="text-xl md:text-2xl font-black uppercase text-white leading-tight">Misión Completada</h2>
+                           <p className={cn("font-bold", gameState.winner === "red" ? "text-[#FF4B4B]" : "text-[#4B9FFF]")}>
+                             ¡Ganó el Equipo {gameState.winner === "red" ? "Rojo" : "Azul"}!
+                           </p>
+                         </div>
+                      </div>
+                      {isHost ? (
+                        <button onClick={handleReturnToLobby} className="w-full md:w-auto py-3 px-6 bg-primary hover:bg-primary-hover text-white font-black rounded-xl uppercase tracking-widest shadow-[0_0_20px_rgba(75,159,255,0.4)] transition-all flex items-center justify-center gap-2">
+                          <RotateCcw className="w-5 h-5" /> Volver al Cuartel
+                        </button>
+                      ) : (
+                        <p className="text-neutral-team text-sm font-bold uppercase tracking-widest">Esperando al líder...</p>
+                      )}
+                   </div>
+                )}
 
-                   {((!isSpymaster && isMyTurn) || (isSinglePlayer && gameState.currentClue)) && (
-                     <button 
-                       onClick={handleEndTurn}
-                       className="w-full md:w-auto bg-white text-bg px-8 py-3 rounded-xl text-sm font-black hover:bg-white/90 shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all"
-                     >
-                       PASAR TURNO
+                {/* ACCIONES FIJAS (In-Game) - ¡Nunca quedan tapadas! */}
+                {gameState.status === "playing" && (
+                   <div className="absolute inset-x-0 bottom-0 shrink-0 p-3 md:p-4 bg-bg/95 backdrop-blur-xl border-t border-white/10 flex flex-wrap items-center justify-center gap-3 md:gap-4 z-20 shadow-[0_-10px_30px_rgba(0,0,0,0.6)]">
+                     {isHost && (
+                       <button onClick={() => setShowTerminateConfirm(true)} className="px-4 py-2.5 md:px-6 md:py-3 rounded-xl text-xs md:text-sm font-bold bg-[#FF4B4B]/10 text-[#FF4B4B] border border-[#FF4B4B]/30 hover:bg-[#FF4B4B]/20 transition-all flex items-center gap-2">
+                         <Power className="w-4 h-4" /> <span className="hidden sm:inline">Terminar</span>
+                       </button>
+                     )}
+                     
+                     {((!isSpymaster && isMyTurn) || (isSinglePlayer && gameState.currentClue)) && (
+                       <button onClick={handleEndTurn} className="flex-1 max-w-[300px] md:w-auto bg-white text-bg px-6 py-2.5 md:px-8 md:py-3 rounded-xl text-sm font-black hover:bg-white/90 shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all uppercase tracking-widest">
+                         Pasar Turno
+                       </button>
+                     )}
+                     
+                     {/* BOTÓN MOBILE: Abrir/Cerrar Pistas */}
+                     <button onClick={() => setShowHistoryMobile(true)} className="lg:hidden px-4 py-2.5 rounded-xl text-xs font-bold bg-[#4B9FFF]/10 text-[#4B9FFF] border border-[#4B9FFF]/30 hover:bg-[#4B9FFF]/20 transition-all flex items-center gap-2">
+                       <BookOpen className="w-4 h-4" /> Pistas
                      </button>
-                   )}
-                 </div>
-               )}
+                   </div>
+                )}
              </div>
 
-             {/* Sidebar Derecho: Pistas o Victoria */}
-             <aside className="w-full lg:w-80 xl:w-96 shrink-0 bg-white/5 border-l border-white/10 flex flex-col shadow-2xl z-10">
-                {gameState.status === "finished" ? (
-                  // PANEL DE VICTORIA
-                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-6">
-                    <motion.div 
-                      initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }}
-                      transition={{ type: "spring", bounce: 0.5 }}
-                      className={cn("p-6 rounded-full shadow-[0_0_50px_rgba(0,0,0,0.5)]", gameState.winner === "red" ? "bg-[#FF4B4B]/20 text-[#FF4B4B]" : "bg-[#4B9FFF]/20 text-[#4B9FFF]")}
-                    >
-                      <Trophy className="w-20 h-20" />
-                    </motion.div>
-                    
-                    <div>
-                      <h2 className="text-4xl font-black uppercase text-white mb-2">Misión Completada</h2>
-                      <p className={cn("text-2xl font-bold", gameState.winner === "red" ? "text-[#FF4B4B]" : "text-[#4B9FFF]")}>
-                        ¡Ganó el {gameState.winner === "red" ? "Rojo" : "Azul"}!
-                      </p>
-                    </div>
-                    
-                    {isHost && (
-                      <button 
-                        onClick={handleReturnToLobby}
-                        className="mt-8 w-full py-4 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-2"
-                      >
-                        <RotateCcw className="w-5 h-5" /> AL CUARTEL
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  // PANEL DE PISTAS
-                  <div className="flex-1 flex flex-col h-full overflow-hidden">
-                    <div className="p-4 border-b border-white/10 bg-black/20 shrink-0">
-                      <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-team text-center">Registro de Inteligencia</h3>
-                    </div>
-                    
-                    <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                      <ClueHistory clues={gameState.clues || []} />
-                    </div>
+             {/* SIDEBAR DERECHO: Pistas (Desktop fijo / Mobile deslizable) */}
+             <aside className={cn(
+                "w-full lg:w-80 xl:w-96 shrink-0 bg-bg-dark/95 lg:bg-white/5 border-t lg:border-t-0 lg:border-l border-white/10 flex flex-col shadow-2xl z-30 transition-transform duration-300",
+                "fixed inset-x-0 bottom-0 top-[15vh] lg:static lg:translate-y-0",
+                showHistoryMobile ? "translate-y-0" : "translate-y-full lg:translate-y-0",
+                // Si la partida terminó, se oculta la sidebar para darle espacio visual total al tablero
+                gameState.status === "finished" && "hidden"
+             )}>
+                {/* Botón cerrar en Mobile */}
+                <div className="lg:hidden p-4 bg-black border-b border-white/10 flex justify-between items-center shrink-0">
+                   <h3 className="font-bold text-primary uppercase tracking-widest flex items-center gap-2">
+                     <BookOpen className="w-4 h-4" /> Inteligencia
+                   </h3>
+                   <button onClick={() => setShowHistoryMobile(false)} className="p-2 bg-white/10 rounded-lg text-white hover:bg-white/20 transition">
+                     <X className="w-5 h-5" />
+                   </button>
+                </div>
 
-                    <div className="shrink-0 p-4 border-t border-white/10 bg-bg-dark/50">
-                      <ClueInput 
-                        onGiveClue={handleGiveClue} disabled={!canGiveClue}
-                        isMyTurn={isMyTurn} isSpymaster={effectiveIsSpymaster}
-                        teamWordsRemaining={gameState.turn === "red" ? redRemaining : blueRemaining}
-                        boardWords={gameState.cards.map(c => c.word)}
-                      />
+                {/* Título en Desktop */}
+                <div className="hidden lg:block p-4 border-b border-white/10 bg-black/20 shrink-0">
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-team text-center">Registro de Inteligencia</h3>
+                </div>
+                
+                {/* Historial */}
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                  <ClueHistory clues={gameState.clues || []} />
+                </div>
+
+                {/* Pista Actual Activa */}
+                {gameState.currentClue && (
+                  <div className="shrink-0 p-4 bg-black/40 border-t border-white/10">
+                    <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-center">
+                      <span className="text-[10px] uppercase font-black text-neutral-team mb-1 block">Adivinadas / Total</span>
+                      <span className="text-2xl font-black text-white">
+                        {gameState.guessesMade} <span className="text-white/30 mx-1">/</span> {gameState.currentClue.count === 0 ? "∞" : gameState.currentClue.count}
+                      </span>
                     </div>
+                  </div>
+                )}
+
+                {/* Input de Pista (Solo Líder) */}
+                {gameState.status === "playing" && (
+                  <div className="shrink-0 p-4 border-t border-white/10 bg-black/60 pb-8 lg:pb-4">
+                    <ClueInput 
+                      onGiveClue={handleGiveClue} disabled={!canGiveClue}
+                      isMyTurn={isMyTurn} isSpymaster={effectiveIsSpymaster}
+                      teamWordsRemaining={gameState.turn === "red" ? redRemaining : blueRemaining}
+                      boardWords={gameState.cards.map(c => c.word)}
+                    />
                   </div>
                 )}
              </aside>
@@ -357,20 +363,12 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
         )}
       </main>
 
-      {/* PANEL FLOTANTE EQUIPOS */}
+      {/* ================= MODALES Y PANELES EXTRA ================= */}
       <AnimatePresence>
         {showTeamsPanel && gameState.status === "playing" && (
           <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowTeamsPanel(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-            />
-            <motion.div
-              initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed left-0 top-0 bottom-0 w-full max-w-sm bg-bg/95 backdrop-blur-2xl border-r border-white/20 z-50 flex flex-col shadow-2xl"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowTeamsPanel(false)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" />
+            <motion.div initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", damping: 30, stiffness: 300 }} className="fixed left-0 top-0 bottom-0 w-full max-w-sm bg-bg/95 backdrop-blur-2xl border-r border-white/20 z-50 flex flex-col shadow-2xl">
               <div className="p-4 border-b border-white/10 flex items-center justify-between shrink-0">
                 <h3 className="font-bold text-lg text-white flex items-center gap-2"><Users className="text-primary"/> Agentes</h3>
                 <button onClick={() => setShowTeamsPanel(false)} className="p-2 hover:bg-white/10 rounded-lg text-neutral-team transition-colors"><X className="w-5 h-5" /></button>
@@ -383,7 +381,7 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
         )}
       </AnimatePresence>
 
-      {/* MODALES SALIR/TERMINAR */}
+      {/* Modales de Confirmación */}
       <AnimatePresence>
         {showTerminateConfirm && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] flex items-center justify-center p-4">
