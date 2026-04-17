@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./theme.css"; /* ESTA LÍNEA ES LA QUE FALTA */
 
 body {
   @apply bg-bg text-text-main antialiased overflow-hidden;
@@ -10,6 +11,8 @@ body {
   background-size: 100% 100%;
   background-attachment: fixed;
 }
+
+/* El resto del código de este archivo queda igual... */
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
