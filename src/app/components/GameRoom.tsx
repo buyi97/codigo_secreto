@@ -116,34 +116,49 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-bg relative">
+      {/* Floating Teams Toggle Button - Always visible */}
+      <motion.button
+        onClick={() => setShowTeamsPanel(!showTeamsPanel)}
+        className={cn(
+          "fixed left-4 top-24 z-50 p-3 rounded-xl backdrop-blur-xl transition-all shadow-2xl border-2",
+          showTeamsPanel 
+            ? "bg-white/20 border-white/40 text-white" 
+            : "bg-black/40 border-white/10 text-neutral-team hover:bg-white/10 hover:border-white/20"
+        )}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        {showTeamsPanel ? <X className="w-5 h-5" /> : <Users className="w-5 h-5" />}
+      </motion.button>
+
       {/* Header */}
-      <header className="h-16 md:h-20 px-4 md:px-6 flex items-center justify-between bg-black/60 border-b border-white/10 shrink-0 z-20 backdrop-blur-xl">
+      <header className="h-16 md:h-20 px-4 md:px-6 flex items-center justify-between bg-black/70 border-b border-white/20 shrink-0 z-20 backdrop-blur-2xl shadow-lg">
         <div className="flex items-center gap-3 md:gap-6">
           {/* Scores */}
           <div className="flex items-center gap-2">
-            <div className="flex flex-col items-center px-3 md:px-4 py-1.5 md:py-2 rounded-lg bg-[#FF4B4B]/15 border border-[#FF4B4B]/40 min-w-[50px] md:min-w-[70px]">
-              <span className="text-base md:text-2xl font-black text-[#FF4B4B]">{redRemaining}/{redTotal}</span>
+            <div className="flex flex-col items-center px-3 md:px-5 py-2 md:py-2.5 rounded-xl bg-[#FF4B4B]/20 border-2 border-[#FF4B4B]/60 min-w-[50px] md:min-w-[80px] backdrop-blur-md shadow-[0_0_15px_rgba(255,75,75,0.3)]">
+              <span className="text-lg md:text-3xl font-black text-[#FF4B4B] drop-shadow-[0_0_8px_rgba(255,75,75,0.8)]">{redRemaining}/{redTotal}</span>
             </div>
-            <div className="flex flex-col items-center px-3 md:px-4 py-1.5 md:py-2 rounded-lg bg-[#4B9FFF]/15 border border-[#4B9FFF]/40 min-w-[50px] md:min-w-[70px]">
-              <span className="text-base md:text-2xl font-black text-[#4B9FFF]">{blueRemaining}/{blueTotal}</span>
+            <div className="flex flex-col items-center px-3 md:px-5 py-2 md:py-2.5 rounded-xl bg-[#4B9FFF]/20 border-2 border-[#4B9FFF]/60 min-w-[50px] md:min-w-[80px] backdrop-blur-md shadow-[0_0_15px_rgba(75,159,255,0.3)]">
+              <span className="text-lg md:text-3xl font-black text-[#4B9FFF] drop-shadow-[0_0_8px_rgba(75,159,255,0.8)]">{blueRemaining}/{blueTotal}</span>
             </div>
           </div>
           
           {/* Timer */}
           <div className={cn(
-            "flex items-center gap-2 px-3 py-2 rounded-xl border transition-all",
-            gameState.isUltimatum ? "bg-[#FF4B4B]/20 border-[#FF4B4B] animate-pulse" : 
-            (isCriticalTime ? "bg-[#FF4B4B]/80 border-[#FF4B4B] shadow-[0_0_20px_rgba(255,75,75,0.5)]" : "bg-black/40 border-white/10")
+            "flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 transition-all backdrop-blur-md",
+            gameState.isUltimatum ? "bg-[#FF4B4B]/30 border-[#FF4B4B] animate-pulse shadow-[0_0_20px_rgba(255,75,75,0.6)]" : 
+            (isCriticalTime ? "bg-[#FF4B4B]/90 border-[#FF4B4B] shadow-[0_0_25px_rgba(255,75,75,0.8)]" : "bg-black/50 border-white/20")
           )}>
-            <Clock className={cn("w-4 h-4", (gameState.isUltimatum || isCriticalTime) ? "text-white" : "text-amber-400")} />
+            <Clock className={cn("w-5 h-5", (gameState.isUltimatum || isCriticalTime) ? "text-white" : "text-amber-400")} />
             <div className="flex flex-col items-center leading-none">
               {(gameState.isUltimatum || isCriticalTime) && (
-                <span className="text-[8px] font-black text-white uppercase mb-0.5">
+                <span className="text-[9px] font-black text-white uppercase mb-0.5">
                   {gameState.isUltimatum ? "Ultimátum" : "¡RÁPIDO!"}
                 </span>
               )}
               <span className={cn(
-                "font-mono text-sm md:text-xl font-bold",
+                "font-mono text-base md:text-2xl font-bold",
                 (gameState.isUltimatum || isCriticalTime) ? "text-white" : (gameState.timer < 15 && gameState.timer !== -1 ? "text-red-500 animate-pulse" : "text-amber-400")
               )}>
                 {gameState.timer === -1 ? "∞" : `${Math.floor(gameState.timer / 60)}:${(gameState.timer % 60).toString().padStart(2, '0')}`}
@@ -155,10 +170,10 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
         {/* Center - Turn indicator (hidden on small screens) */}
         <div className="hidden md:flex items-center">
           <div className={cn(
-            "px-6 py-2 rounded-full text-sm font-bold shadow-lg transition-all",
+            "px-8 py-3 rounded-full text-base font-bold shadow-lg transition-all border-2 backdrop-blur-md",
             gameState.turn === "red" 
-              ? "bg-[#FF4B4B] text-white shadow-[#FF4B4B]/40" 
-              : "bg-[#4B9FFF] text-white shadow-[#4B9FFF]/40"
+              ? "bg-[#FF4B4B]/90 border-[#FF4B4B] text-white shadow-[0_0_20px_rgba(255,75,75,0.5)]" 
+              : "bg-[#4B9FFF]/90 border-[#4B9FFF] text-white shadow-[0_0_20px_rgba(75,159,255,0.5)]"
           )}>
             {gameState.status === "playing" 
               ? `Turno ${gameState.turn === "red" ? "Rojo" : "Azul"}: ${gameState.currentClue ? "Eligiendo" : "Pensando"}`
@@ -169,8 +184,8 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
         {/* Right side */}
         <div className="flex items-center gap-2 md:gap-3">
           {/* Room ID */}
-          <div className="hidden sm:flex items-center gap-2 bg-black/60 text-white px-3 py-2 rounded-lg border border-white/10">
-            <span className="text-[10px] text-neutral-team uppercase">Sala:</span>
+          <div className="hidden sm:flex items-center gap-2 bg-black/70 text-white px-4 py-2.5 rounded-xl border-2 border-white/20 backdrop-blur-md">
+            <span className="text-[10px] text-neutral-team uppercase font-bold">Sala:</span>
             <span className="font-mono text-sm font-bold">{gameState.roomId}</span>
             <button 
               onClick={copyRoomLink}
@@ -185,8 +200,8 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
             disabled={gameState.status === "playing"}
             onClick={() => setShowSettings(!showSettings)}
             className={cn(
-              "p-2 rounded-lg transition-colors border border-white/10",
-              showSettings ? "bg-white text-bg" : "hover:bg-white/10 text-neutral-team",
+              "p-2.5 rounded-xl transition-colors border-2 backdrop-blur-md",
+              showSettings ? "bg-white text-bg border-white" : "hover:bg-white/10 text-neutral-team border-white/20",
               gameState.status === "playing" && "opacity-30 cursor-not-allowed"
             )}
           >
@@ -196,7 +211,7 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
           {/* Leave */}
           <button 
             onClick={() => setShowLeaveConfirm(true)}
-            className="p-2 hover:bg-[#FF4B4B]/20 rounded-lg transition-colors border border-white/10 group"
+            className="p-2.5 hover:bg-[#FF4B4B]/20 rounded-xl transition-colors border-2 border-white/20 backdrop-blur-md group"
           >
             <LogOut className="w-5 h-5 text-neutral-team group-hover:text-[#FF4B4B]" />
           </button>
@@ -226,8 +241,8 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
               )}
             </div>
           ) : (
-            <div className="w-full h-full p-2 flex items-center justify-center">
-              <div className="w-full max-w-4xl aspect-square">
+            <div className="w-full h-full flex items-center justify-center overflow-hidden">
+              <div className="w-full h-full max-w-[min(100%,calc(100vh-200px))] max-h-[min(100%,calc(100vh-200px))] aspect-square">
                 <Board 
                   cards={gameState.cards} 
                   isSpymaster={effectiveIsSpymaster} 
@@ -347,26 +362,26 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
         </div>
       </footer>
 
-      {/* Teams Slide-out Panel (Desktop: sidebar, Mobile: full overlay) */}
+      {/* Teams Slide-out Panel (Works on ALL screen sizes) */}
       <AnimatePresence>
         {showTeamsPanel && (
           <>
-            {/* Backdrop */}
+            {/* Backdrop - visible on all sizes */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowTeamsPanel(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
             />
             
-            {/* Panel */}
+            {/* Panel - slides from left on all screen sizes */}
             <motion.div
-              initial={{ x: "100%" }}
+              initial={{ x: "-100%" }}
               animate={{ x: 0 }}
-              exit={{ x: "100%" }}
+              exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-sm bg-bg border-l border-white/10 z-50 overflow-y-auto"
+              className="fixed left-0 top-0 bottom-0 w-full max-w-sm bg-bg/95 backdrop-blur-2xl border-r border-white/20 z-50 overflow-y-auto shadow-2xl"
             >
               <div className="sticky top-0 bg-bg/95 backdrop-blur-xl border-b border-white/10 p-4 flex items-center justify-between z-10">
                 <h3 className="font-bold text-lg">Equipos</h3>
@@ -393,20 +408,6 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
           </>
         )}
       </AnimatePresence>
-
-      {/* Desktop Teams Sidebar (always visible on lg+) */}
-      <div className="hidden lg:block fixed left-0 top-20 bottom-16 w-72 bg-white/5 backdrop-blur-md border-r border-white/10 overflow-y-auto p-4 z-30">
-        <Controls 
-          players={gameState.players}
-          currentPlayer={currentPlayer}
-          onSelectTeam={handleSelectTeam}
-          onSelectRole={handleSelectRole}
-          onStartGame={handleStartGame}
-          onMovePlayer={handleMovePlayer}
-          gameStatus={gameState.status}
-          maxPlayers={gameState.config.maxPlayers}
-        />
-      </div>
 
       {/* Modals */}
       <AnimatePresence>

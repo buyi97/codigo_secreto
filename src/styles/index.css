@@ -3,6 +3,12 @@
 body {
   @apply bg-bg text-text-main antialiased overflow-hidden;
   font-family: var(--font-sans);
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(75, 159, 255, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 75, 75, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 40% 20%, rgba(75, 159, 255, 0.05) 0%, transparent 30%);
+  background-size: 100% 100%;
+  background-attachment: fixed;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -23,56 +29,100 @@ body {
 
 /* Card Styles */
 .card-revealed-red {
-  @apply bg-red-team text-white border-red-400 shadow-[0_0_20px_rgba(255,75,75,0.5)] ring-2 ring-red-team/30;
+  @apply bg-gradient-to-br from-[#FF4B4B] to-[#dc2626] text-white border-2 border-[#FF4B4B] shadow-[0_0_30px_rgba(255,75,75,0.6),inset_0_0_20px_rgba(255,255,255,0.1)] ring-4 ring-[#FF4B4B]/20;
+  animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 30px rgba(255, 75, 75, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.1); }
+  50% { box-shadow: 0 0 45px rgba(255, 75, 75, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.15); }
 }
 
 .card-revealed-blue {
-  @apply bg-blue-team text-white border-blue-400 shadow-[0_0_20px_rgba(75,159,255,0.5)] ring-2 ring-blue-team/30;
+  @apply bg-gradient-to-br from-[#4B9FFF] to-[#2563eb] text-white border-2 border-[#4B9FFF] shadow-[0_0_30px_rgba(75,159,255,0.6),inset_0_0_20px_rgba(255,255,255,0.1)] ring-4 ring-[#4B9FFF]/20;
+  animation: pulse-blue 2s infinite;
+}
+
+@keyframes pulse-blue {
+  0%, 100% { box-shadow: 0 0 30px rgba(75, 159, 255, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.1); }
+  50% { box-shadow: 0 0 45px rgba(75, 159, 255, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.15); }
 }
 
 .card-revealed-neutral {
-  @apply bg-[#e2e8f0] text-black border-[#94a3b8] shadow-inner;
+  @apply bg-gradient-to-br from-[#f1f5f9] to-[#cbd5e1] text-slate-800 border-2 border-[#94a3b8] shadow-inner;
 }
 
 .card-revealed-assassin {
-  @apply bg-[#000000] text-white border-white shadow-[0_0_40px_rgba(0,0,0,1)] ring-2 ring-white/40 relative;
+  @apply bg-gradient-to-br from-black via-[#1a1a1a] to-black text-white border-4 border-white shadow-[0_0_50px_rgba(255,0,0,0.8),inset_0_0_30px_rgba(255,0,0,0.3)] ring-4 ring-white/40;
   isolation: isolate;
+  animation: pulse-assassin 1.5s infinite;
+}
+
+@keyframes pulse-assassin {
+  0%, 100% { 
+    box-shadow: 0 0 50px rgba(255, 0, 0, 0.8), inset 0 0 30px rgba(255, 0, 0, 0.3);
+    border-color: white;
+  }
+  50% { 
+    box-shadow: 0 0 70px rgba(255, 0, 0, 1), inset 0 0 40px rgba(255, 0, 0, 0.5);
+    border-color: rgba(255, 75, 75, 1);
+  }
 }
 
 .card-revealed-assassin::before {
   content: "";
   @apply absolute inset-0 pointer-events-none;
   z-index: -1;
-  opacity: 0.2;
+  opacity: 0.3;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 2a9 9 0 0 0-9 9c0 2.58 1.1 4.89 2.86 6.53L5 20a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-1h6v1a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1l-.86-2.47C19.9 15.89 21 13.58 21 11a9 9 0 0 0-9-9zm-3 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm6 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 55%;
+  background-size: 65%;
 }
 
 /* Spymaster View - Unrevealed */
 .card-spymaster-red {
-  @apply bg-card-bg border-red-team border-2 text-white shadow-[inset_0_0_10px_rgba(255,75,75,0.2)];
+  @apply bg-gradient-to-br from-card-bg to-[#1a0a0a] border-[#FF4B4B] border-2 text-white shadow-[inset_0_0_15px_rgba(255,75,75,0.3)] backdrop-blur-sm;
+  position: relative;
+}
+
+.card-spymaster-red::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 75, 75, 0.1) 0%, transparent 100%);
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 .card-spymaster-blue {
-  @apply bg-card-bg border-blue-team border-2 text-white shadow-[inset_0_0_10px_rgba(75,159,255,0.2)];
+  @apply bg-gradient-to-br from-card-bg to-[#0a0a1a] border-[#4B9FFF] border-2 text-white shadow-[inset_0_0_15px_rgba(75,159,255,0.3)] backdrop-blur-sm;
+  position: relative;
+}
+
+.card-spymaster-blue::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(75, 159, 255, 0.1) 0%, transparent 100%);
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 .card-spymaster-neutral {
-  background-color: #52525b !important;
-  @apply border-neutral-team/40 border-2 text-white opacity-100 shadow-none backdrop-blur-none;
-  background-image: none !important;
+  background: linear-gradient(135deg, #3f3f46 0%, #52525b 100%) !important;
+  @apply border-neutral-team/60 border-2 text-white opacity-100 shadow-[inset_0_0_10px_rgba(148,163,184,0.2)] backdrop-blur-none;
+  background-image: linear-gradient(135deg, #3f3f46 0%, #52525b 100%) !important;
 }
 
 .card-spymaster-assassin {
-  background-color: #000000 !important;
-  @apply border-white border-4 relative shadow-none;
+  background: linear-gradient(135deg, #000000 0%, #1a0000 50%, #000000 100%) !important;
+  @apply border-white border-4 relative shadow-[inset_0_0_20px_rgba(255,0,0,0.4)];
   color: #ffffff !important;
   opacity: 1 !important;
-  font-weight: 800;
+  font-weight: 900;
   isolation: isolate;
-  background-image: none !important;
+  background-image: linear-gradient(135deg, #000000 0%, #1a0000 50%, #000000 100%) !important;
   backdrop-filter: none !important;
 }
 
@@ -80,13 +130,30 @@ body {
   content: "";
   @apply absolute inset-0 pointer-events-none;
   z-index: -1;
-  opacity: 0.4;
+  opacity: 0.5;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 2a9 9 0 0 0-9 9c0 2.58 1.1 4.89 2.86 6.53L5 20a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-1h6v1a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1l-.86-2.47C19.9 15.89 21 13.58 21 11a9 9 0 0 0-9-9zm-3 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm6 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 50%;
+  background-size: 60%;
 }
 
 .card-hidden {
-  @apply bg-card-bg hover:bg-slate-700/50 border-glass-border border text-text-main shadow-md;
+  @apply bg-gradient-to-br from-card-bg to-[#0f1420] hover:from-slate-700/60 hover:to-slate-600/40 border-2 border-glass-border text-text-main shadow-lg backdrop-blur-sm;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.card-hidden::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.card-hidden:hover::before {
+  opacity: 1;
 }
