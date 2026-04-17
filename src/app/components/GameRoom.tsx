@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Socket } from "socket.io-client";
 import { GameState, Player, Role, PlayerTeam } from "../lib/gameLogic";
 import Board from "./Board";
@@ -23,11 +23,32 @@ interface GameRoomProps {
 }
 
 export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: GameRoomProps) {
-  const [copied, setCopied] = React.useState(false);
-  const [showTerminateConfirm, setShowTerminateConfirm] = React.useState(false);
-  const [showLeaveConfirm, setShowLeaveConfirm] = React.useState(false);
-  const [showTeamsPanel, setShowTeamsPanel] = React.useState(false);
-  const [showHistoryMobile, setShowHistoryMobile] = React.useState(false); // NUEVO: Control del panel en mobile
+  const [copied, setCopied] = useState(false);
+  const [showTerminateConfirm, setShowTerminateConfirm] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [showTeamsPanel, setShowTeamsPanel] = useState(false);
+  
+  // ESTADO LOCAL: Permite a un jugador volver a ver el Lobby mientras espera que el Líder reinicie la partida
+  const [localLobbyView, setLocalLobbyView] = useState(false);
+
+  // Si el líder inicia una partida, forzamos a todos a salir de su vista local de lobby
+  useEffect(() => {
+    if (gameState.status === "playing") {
+      setLocalLobbyView(false);
+    }
+  }, [gameState.status]);
+
+  const effectiveStatus = localLobbyView ? "lobby" : gameState.status;
+
+  const handleVolverAlCuartel = () => {
+    if (currentPlayer?.isHost) {
+      // El host resetea la sala para todos
+      socket.emit("returnToLobby", { roomId: gameState.roomId });
+    } else {
+      // El jugador normal se va al lobby a esperar
+      setLocalLobbyView(true);
+    }
+  };
 
   const handleSelectTeam = (team: PlayerTeam) => {
     if (gameState.status === "playing") return;
@@ -54,10 +75,6 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
       }
     }
     socket.emit("startGame", gameState.roomId);
-  };
-
-  const handleReturnToLobby = () => {
-    socket.emit("returnToLobby", { roomId: gameState.roomId });
   };
 
   const confirmTerminate = () => {
@@ -122,7 +139,6 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
   const isHost = currentPlayer?.isHost;
   const isCriticalTime = gameState.status === "playing" && gameState.timer > 0 && gameState.timer <= 10 && !gameState.isUltimatum;
 
-  // Textos súper claros para el estado del turno
   const turnPhase = gameState.currentClue ? "ELECCIÓN" : "PISTA";
   const turnTeamName = gameState.turn === "red" ? "ROJO" : "AZUL";
   const turnTeamColor = gameState.turn === "red" ? "text-[#FF4B4B]" : "text-[#4B9FFF]";
@@ -131,87 +147,70 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
     <div className="flex flex-col h-[100dvh] overflow-hidden bg-bg relative">
       
       {/* ================= HEADER GLOBAL ================= */}
-      <header className="h-16 md:h-20 px-2 md:px-6 flex items-center justify-between bg-black/80 border-b border-white/10 shrink-0 z-20 backdrop-blur-2xl shadow-lg">
+      <header className="w-full flex flex-col md:flex-row md:items-center justify-between bg-black/90 border-b border-white/10 shrink-0 z-20 backdrop-blur-2xl shadow-lg p-2 md:px-6 md:h-20 gap-2">
         
-        {/* IZQUIERDA: Historial y Room ID */}
-        <div className="flex items-center gap-2 md:gap-4 shrink-0">
-          <div className="flex flex-col md:flex-row items-center md:gap-2 bg-white/5 px-2 md:px-3 py-1 md:py-2 rounded-xl border border-white/10">
-            <span className="text-[8px] md:text-[11px] uppercase tracking-widest text-neutral-team font-black">Historial</span>
-            <div className="flex items-center gap-1.5 md:gap-2 leading-none">
-              <span className={cn("font-black transition-all", redWins > blueWins ? "text-lg md:text-2xl text-[#FF4B4B]" : "text-sm md:text-lg text-[#FF4B4B]/70")}>{redWins}</span>
-              <span className="text-white/20 text-xs">-</span>
-              <span className={cn("font-black transition-all", blueWins > redWins ? "text-lg md:text-2xl text-[#4B9FFF]" : "text-sm md:text-lg text-[#4B9FFF]/70")}>{blueWins}</span>
-            </div>
+        {/* Fila 1 (Mobile) / Izquierda (Desktop): Sala e Historial */}
+        <div className="flex items-center justify-between md:justify-start w-full md:w-auto gap-2 shrink-0">
+          <div className="flex items-center gap-1 md:gap-2 bg-white/5 px-2 md:px-3 py-1 md:py-2 rounded-xl border border-white/10">
+            <span className="text-[10px] uppercase tracking-widest text-neutral-team font-black mr-1">Historial</span>
+            <span className={cn("font-black transition-all", redWins > blueWins ? "text-lg text-[#FF4B4B]" : "text-sm text-[#FF4B4B]/70")}>{redWins}</span>
+            <span className="text-white/20 text-xs mx-1">-</span>
+            <span className={cn("font-black transition-all", blueWins > redWins ? "text-lg text-[#4B9FFF]" : "text-sm text-[#4B9FFF]/70")}>{blueWins}</span>
           </div>
           
-          <div className="flex items-center gap-1 md:gap-2 bg-black/50 text-white px-2 md:px-3 py-1.5 md:py-2 rounded-xl border border-white/10">
-            <span className="hidden sm:inline text-[10px] text-neutral-team uppercase font-bold">Sala:</span>
-            <span className="font-mono text-xs md:text-sm font-bold text-primary">{gameState.roomId}</span>
-            <button onClick={copyRoomLink} className="p-1 hover:bg-white/10 rounded transition-colors">
+          <div className="flex items-center gap-1.5 bg-black/50 text-white px-2 py-1.5 md:py-2 rounded-xl border border-white/10">
+            <span className="text-[10px] text-neutral-team uppercase font-bold">Sala</span>
+            <span className="font-mono text-sm font-bold text-primary">{gameState.roomId}</span>
+            <button onClick={copyRoomLink} className="p-1 hover:bg-white/10 rounded transition-colors ml-1">
               {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-neutral-team" />}
             </button>
           </div>
         </div>
 
-        {/* CENTRO: Marcadores y Timer */}
-        {gameState.status !== "lobby" && (
-          <div className="flex flex-col items-center gap-0.5 md:gap-1 absolute left-1/2 -translate-x-1/2 z-0">
-            <div className="flex items-center gap-1 md:gap-2 bg-bg/80 px-1.5 md:px-2 py-1 rounded-xl backdrop-blur-md border border-white/5 shadow-md">
-              {/* Equipo Rojo (Faltantes / Total) */}
-              <div className="flex items-baseline gap-0.5 md:gap-1 px-2 md:px-3 py-1 md:py-1.5 rounded-lg bg-[#FF4B4B]/10 border border-[#FF4B4B]/30">
-                <span className="text-sm md:text-xl font-black text-[#FF4B4B] leading-none">{redRemaining}</span>
-                <span className="text-[9px] md:text-xs font-bold text-[#FF4B4B]/60 leading-none">/{redTotal}</span>
-              </div>
-              
-              {/* Timer */}
-              <div className={cn(
-                "flex items-center justify-center min-w-[45px] md:min-w-[80px] py-1 md:py-1.5 rounded-lg border transition-all",
-                gameState.isUltimatum ? "bg-[#FF4B4B]/30 border-[#FF4B4B] animate-pulse shadow-[0_0_15px_rgba(255,75,75,0.5)]" : 
-                (isCriticalTime ? "bg-[#FF4B4B]/80 border-[#FF4B4B] shadow-[0_0_20px_rgba(255,75,75,0.8)]" : "bg-black/40 border-white/10")
-              )}>
-                <span className={cn(
-                  "font-mono text-sm md:text-xl font-bold",
-                  (gameState.isUltimatum || isCriticalTime) ? "text-white" : (gameState.timer < 15 && gameState.timer !== -1 ? "text-red-500 animate-pulse" : "text-amber-400")
-                )}>
-                  {gameState.timer === -1 ? "∞" : `${Math.floor(gameState.timer / 60)}:${(gameState.timer % 60).toString().padStart(2, '0')}`}
-                </span>
-              </div>
+        {/* Fila 2 (Mobile) / Centro (Desktop): Marcadores y Estado */}
+        {effectiveStatus !== "lobby" && (
+          <div className="flex items-center justify-between md:justify-center w-full md:flex-1 gap-2 md:gap-8">
+            {/* Marcador Rojo */}
+            <div className="flex items-baseline gap-0.5 md:gap-1 px-3 py-1.5 rounded-lg bg-[#FF4B4B]/10 border border-[#FF4B4B]/30 shadow-inner">
+              <span className="text-lg md:text-2xl font-black text-[#FF4B4B] leading-none">{redRemaining}</span>
+              <span className="text-[10px] md:text-xs font-bold text-[#FF4B4B]/60 leading-none">/{redTotal}</span>
+            </div>
 
-              {/* Equipo Azul (Faltantes / Total) */}
-              <div className="flex items-baseline gap-0.5 md:gap-1 px-2 md:px-3 py-1 md:py-1.5 rounded-lg bg-[#4B9FFF]/10 border border-[#4B9FFF]/30">
-                <span className="text-sm md:text-xl font-black text-[#4B9FFF] leading-none">{blueRemaining}</span>
-                <span className="text-[9px] md:text-xs font-bold text-[#4B9FFF]/60 leading-none">/{blueTotal}</span>
+            {/* Estado del Turno y Timer */}
+            <div className="flex flex-col items-center justify-center -mt-1 md:mt-0">
+              <div className="text-[10px] md:text-sm font-black uppercase tracking-widest leading-none mb-1">
+                {gameState.status === "finished" ? (
+                  <span className="text-green-400">Misión Finalizada</span>
+                ) : (
+                  <span>TURNO {turnPhase} <span className={turnTeamColor}>{turnTeamName}</span></span>
+                )}
+              </div>
+              <div className={cn(
+                "px-4 py-0.5 rounded-md border font-mono text-sm md:text-lg font-bold transition-all shadow-md leading-tight",
+                gameState.isUltimatum ? "bg-[#FF4B4B]/30 border-[#FF4B4B] animate-pulse" : 
+                (isCriticalTime ? "bg-[#FF4B4B]/80 border-[#FF4B4B]" : "bg-black/40 border-white/10 text-amber-400")
+              )}>
+                {gameState.timer === -1 ? "∞" : `${Math.floor(gameState.timer / 60)}:${(gameState.timer % 60).toString().padStart(2, '0')}`}
               </div>
             </div>
 
-            {/* Turno Explícito (Visible siempre) */}
-            <div className="text-[9px] md:text-sm font-black uppercase tracking-widest whitespace-nowrap">
-              {gameState.status === "finished" ? (
-                <span className="text-green-400">Misión Finalizada</span>
-              ) : (
-                <span>TURNO {turnPhase} <span className={turnTeamColor}>{turnTeamName}</span></span>
-              )}
+            {/* Marcador Azul */}
+            <div className="flex items-baseline gap-0.5 md:gap-1 px-3 py-1.5 rounded-lg bg-[#4B9FFF]/10 border border-[#4B9FFF]/30 shadow-inner">
+              <span className="text-lg md:text-2xl font-black text-[#4B9FFF] leading-none">{blueRemaining}</span>
+              <span className="text-[10px] md:text-xs font-bold text-[#4B9FFF]/60 leading-none">/{blueTotal}</span>
             </div>
           </div>
         )}
 
-        {/* DERECHA: Salir y Teams */}
-        <div className="flex items-center gap-1 md:gap-3 shrink-0">
+        {/* Derecha (Desktop): Botones de acciones extras. En Mobile se integran abajo. */}
+        <div className="hidden md:flex items-center justify-end w-full md:w-auto gap-3 shrink-0">
           {gameState.status === "playing" && (
-             <button 
-               onClick={() => setShowTeamsPanel(true)}
-               className="p-1.5 md:p-2.5 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white transition-all shadow-lg flex items-center gap-2"
-             >
-               <Users className="w-4 h-4 md:w-5 md:h-5" />
-               <span className="hidden xl:inline text-sm font-bold">Equipos</span>
+             <button onClick={() => setShowTeamsPanel(true)} className="px-3 py-1.5 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white flex items-center gap-2 transition-all">
+               <Users className="w-5 h-5" /> <span className="text-sm font-bold">Equipos</span>
              </button>
           )}
-          
-          <button 
-            onClick={() => setShowLeaveConfirm(true)}
-            className="p-1.5 md:p-2.5 hover:bg-[#FF4B4B]/20 rounded-xl transition-colors border border-white/20 backdrop-blur-md group"
-          >
-            <LogOut className="w-4 h-4 md:w-5 md:h-5 text-neutral-team group-hover:text-[#FF4B4B]" />
+          <button onClick={() => setShowLeaveConfirm(true)} className="p-2 hover:bg-[#FF4B4B]/20 rounded-xl transition-colors border border-white/20 group">
+            <LogOut className="w-5 h-5 text-neutral-team group-hover:text-[#FF4B4B]" />
           </button>
         </div>
       </header>
@@ -219,11 +218,11 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
       {/* ================= ÁREA PRINCIPAL ================= */}
       <main className="flex-1 flex overflow-hidden">
         
-        {/* --- LOBBY --- */}
-        {gameState.status === "lobby" && (
+        {/* --- ESTADO: LOBBY --- */}
+        {effectiveStatus === "lobby" && (
           <div className="flex-1 overflow-y-auto p-3 md:p-8 custom-scrollbar">
             <div className="max-w-7xl mx-auto w-full flex flex-col xl:grid xl:grid-cols-2 gap-4 md:gap-8 items-start">
-              {/* Panel Izquierdo: Equipos */}
+              {/* Panel Equipos */}
               <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-4 md:p-6 shadow-2xl flex flex-col w-full h-[500px] xl:h-[calc(100vh-140px)]">
                  <div className="flex items-center justify-between mb-4 md:mb-6 shrink-0">
                     <h2 className="text-xl md:text-2xl font-black uppercase text-white flex items-center gap-2">
@@ -233,97 +232,83 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
                  <div className="flex-1 overflow-hidden">
                    <Controls players={gameState.players} currentPlayer={currentPlayer} onSelectTeam={handleSelectTeam} onSelectRole={handleSelectRole} onStartGame={handleStartGame} onMovePlayer={handleMovePlayer} gameStatus={gameState.status} maxPlayers={gameState.config.maxPlayers} />
                  </div>
-                 {isHost && (
+                 {currentPlayer?.isHost && (
                    <button onClick={handleStartGame} className="mt-4 w-full py-4 bg-gradient-to-r from-primary to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-black text-lg md:text-xl rounded-xl shadow-[0_0_20px_rgba(75,159,255,0.4)] transform hover:scale-[1.02] transition-all shrink-0">
                      INICIAR PARTIDA
                    </button>
                  )}
               </div>
 
-              {/* Panel Derecho: Ajustes */}
+              {/* Panel Ajustes */}
               <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-4 md:p-6 shadow-2xl w-full min-h-[600px] xl:h-[calc(100vh-140px)] flex flex-col">
-                 <Settings config={gameState.config} onUpdate={handleUpdateConfig} onClose={() => {}} isHost={isHost || false} />
+                 <Settings config={gameState.config} onUpdate={handleUpdateConfig} onClose={() => {}} isHost={currentPlayer?.isHost || false} />
               </div>
             </div>
           </div>
         )}
 
-        {/* --- JUEGO ACTIVO O FINALIZADO --- */}
-        {gameState.status !== "lobby" && (
-          <div className="flex-1 flex flex-col lg:flex-row min-h-0 min-w-0 relative">
+        {/* --- ESTADO: JUGANDO o FINALIZADO --- */}
+        {effectiveStatus !== "lobby" && (
+          <div className="flex-1 flex flex-col lg:flex-row min-h-0 min-w-0 w-full relative">
              
-             {/* COLUMNA CENTRAL: Tablero + Botones Fijos */}
-             <div className="flex-1 flex flex-col min-w-0 min-h-0 relative">
-                
-                {/* Zona del Tablero (Scrolleable si es muy necesario, pero prioriza encajar) */}
-                <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 md:p-6 flex flex-col custom-scrollbar pb-32 lg:pb-6">
-                   <div className="w-full max-w-5xl mx-auto my-auto flex items-center justify-center">
+             {/* COLUMNA CENTRAL: Tablero */}
+             <div className="flex-1 flex flex-col min-w-0 min-h-0 relative p-1 md:p-4">
+                {/* Zona del Tablero: Ocupa todo el espacio que pueda sin scroll */}
+                <div className="flex-1 w-full flex items-center justify-center min-h-0 relative">
+                   <div className={cn(
+                     "w-full h-full max-w-6xl max-h-[800px] flex transition-opacity duration-700 mx-auto",
+                     gameState.status === "finished" ? "opacity-30 pointer-events-none grayscale-[40%]" : "opacity-100"
+                   )}>
                      <Board cards={gameState.cards} isSpymaster={effectiveIsSpymaster} onCardClick={handleCardClick} canClick={canClick} />
                    </div>
-                </div>
 
-                {/* BANNER FLOTANTE DE VICTORIA (Post-Partida) */}
-                {gameState.status === "finished" && (
-                   <div className="absolute inset-x-0 bottom-0 shrink-0 p-4 md:p-6 bg-black/90 backdrop-blur-2xl border-t border-white/20 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 shadow-[0_-10px_50px_rgba(0,0,0,0.8)] z-20">
-                      <div className="flex items-center gap-4">
-                         <Trophy className={cn("w-10 h-10", gameState.winner === "red" ? "text-[#FF4B4B]" : "text-[#4B9FFF]")} />
-                         <div>
-                           <h2 className="text-xl md:text-2xl font-black uppercase text-white leading-tight">Misión Completada</h2>
-                           <p className={cn("font-bold", gameState.winner === "red" ? "text-[#FF4B4B]" : "text-[#4B9FFF]")}>
-                             ¡Ganó el Equipo {gameState.winner === "red" ? "Rojo" : "Azul"}!
-                           </p>
-                         </div>
+                   {/* Banner central flotante post-partida */}
+                   {gameState.status === "finished" && (
+                      <div className="absolute inset-0 flex items-center justify-center z-10 p-4">
+                         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-bg/95 backdrop-blur-xl border border-white/20 p-6 md:p-12 rounded-3xl text-center shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col items-center max-w-md w-full">
+                            <Trophy className={cn("w-16 h-16 md:w-20 md:h-20 mb-4", gameState.winner === "red" ? "text-[#FF4B4B]" : "text-[#4B9FFF]")} />
+                            <h2 className="text-3xl md:text-4xl font-black uppercase text-white mb-2 leading-none">Misión<br/>Completada</h2>
+                            <p className={cn("text-xl md:text-2xl font-bold mb-8", gameState.winner === "red" ? "text-[#FF4B4B]" : "text-[#4B9FFF]")}>
+                                ¡Ganó el Equipo {gameState.winner === "red" ? "Rojo" : "Azul"}!
+                            </p>
+                            <button onClick={handleVolverAlCuartel} className="w-full py-4 bg-primary hover:bg-primary-hover text-white font-black rounded-xl uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(75,159,255,0.3)]">
+                                <RotateCcw className="w-5 h-5" /> Volver al Cuartel
+                            </button>
+                         </motion.div>
                       </div>
-                      {isHost ? (
-                        <button onClick={handleReturnToLobby} className="w-full md:w-auto py-3 px-6 bg-primary hover:bg-primary-hover text-white font-black rounded-xl uppercase tracking-widest shadow-[0_0_20px_rgba(75,159,255,0.4)] transition-all flex items-center justify-center gap-2">
-                          <RotateCcw className="w-5 h-5" /> Volver al Cuartel
-                        </button>
-                      ) : (
-                        <p className="text-neutral-team text-sm font-bold uppercase tracking-widest">Esperando al líder...</p>
+                   )}
+                </div>
+             </div>
+
+             {/* SIDEBAR / FIXED BOTTOM PISTAS E HISTORIAL */}
+             <aside className={cn(
+                "w-full lg:w-80 xl:w-96 shrink-0 flex flex-col bg-bg-dark border-t lg:border-t-0 lg:border-l border-white/10 z-20 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] lg:shadow-none transition-all",
+                "h-[45vh] lg:h-auto", // En móvil ocupa fijo la parte de abajo
+                gameState.status === "finished" && "hidden lg:flex opacity-30 pointer-events-none" // Si terminó, en móvil se esconde para ver mejor el tablero de fondo
+             )}>
+                {/* Botones de Acción Fijos (Solo en Juego Activo) */}
+                {gameState.status === "playing" && (
+                   <div className="flex gap-2 p-2 md:p-3 border-b border-white/10 bg-black/40 shrink-0">
+                      {/* Botones extras Mobile */}
+                      <button onClick={() => setShowLeaveConfirm(true)} className="lg:hidden p-2.5 rounded-lg bg-white/5 text-neutral-team hover:bg-white/10 hover:text-[#FF4B4B]">
+                         <LogOut className="w-5 h-5" />
+                      </button>
+                      <button onClick={() => setShowTeamsPanel(true)} className="lg:hidden p-2.5 rounded-lg bg-white/5 text-neutral-team hover:bg-white/10 hover:text-white">
+                         <Users className="w-5 h-5" />
+                      </button>
+                      
+                      {isHost && (
+                         <button onClick={() => setShowTerminateConfirm(true)} className="px-3 md:px-4 py-2.5 rounded-lg text-xs md:text-sm font-bold bg-[#FF4B4B]/10 text-[#FF4B4B] border border-[#FF4B4B]/30 flex items-center justify-center lg:flex-1 hover:bg-[#FF4B4B]/20 transition-colors">
+                            Terminar
+                         </button>
+                      )}
+                      {((!isSpymaster && isMyTurn) || (isSinglePlayer && gameState.currentClue)) && (
+                         <button onClick={handleEndTurn} className="flex-1 bg-white text-bg py-2.5 px-2 rounded-lg text-xs md:text-sm font-black uppercase tracking-widest shadow-[0_0_15px_rgba(255,255,255,0.3)] active:scale-95 transition-all">
+                            Pasar Turno
+                         </button>
                       )}
                    </div>
                 )}
-
-                {/* ACCIONES FIJAS (In-Game) - ¡Nunca quedan tapadas! */}
-                {gameState.status === "playing" && (
-                   <div className="absolute inset-x-0 bottom-0 shrink-0 p-3 md:p-4 bg-bg/95 backdrop-blur-xl border-t border-white/10 flex flex-wrap items-center justify-center gap-3 md:gap-4 z-20 shadow-[0_-10px_30px_rgba(0,0,0,0.6)]">
-                     {isHost && (
-                       <button onClick={() => setShowTerminateConfirm(true)} className="px-4 py-2.5 md:px-6 md:py-3 rounded-xl text-xs md:text-sm font-bold bg-[#FF4B4B]/10 text-[#FF4B4B] border border-[#FF4B4B]/30 hover:bg-[#FF4B4B]/20 transition-all flex items-center gap-2">
-                         <Power className="w-4 h-4" /> <span className="hidden sm:inline">Terminar</span>
-                       </button>
-                     )}
-                     
-                     {((!isSpymaster && isMyTurn) || (isSinglePlayer && gameState.currentClue)) && (
-                       <button onClick={handleEndTurn} className="flex-1 max-w-[300px] md:w-auto bg-white text-bg px-6 py-2.5 md:px-8 md:py-3 rounded-xl text-sm font-black hover:bg-white/90 shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all uppercase tracking-widest">
-                         Pasar Turno
-                       </button>
-                     )}
-                     
-                     {/* BOTÓN MOBILE: Abrir/Cerrar Pistas */}
-                     <button onClick={() => setShowHistoryMobile(true)} className="lg:hidden px-4 py-2.5 rounded-xl text-xs font-bold bg-[#4B9FFF]/10 text-[#4B9FFF] border border-[#4B9FFF]/30 hover:bg-[#4B9FFF]/20 transition-all flex items-center gap-2">
-                       <BookOpen className="w-4 h-4" /> Pistas
-                     </button>
-                   </div>
-                )}
-             </div>
-
-             {/* SIDEBAR DERECHO: Pistas (Desktop fijo / Mobile deslizable) */}
-             <aside className={cn(
-                "w-full lg:w-80 xl:w-96 shrink-0 bg-bg-dark/95 lg:bg-white/5 border-t lg:border-t-0 lg:border-l border-white/10 flex flex-col shadow-2xl z-30 transition-transform duration-300",
-                "fixed inset-x-0 bottom-0 top-[15vh] lg:static lg:translate-y-0",
-                showHistoryMobile ? "translate-y-0" : "translate-y-full lg:translate-y-0",
-                // Si la partida terminó, se oculta la sidebar para darle espacio visual total al tablero
-                gameState.status === "finished" && "hidden"
-             )}>
-                {/* Botón cerrar en Mobile */}
-                <div className="lg:hidden p-4 bg-black border-b border-white/10 flex justify-between items-center shrink-0">
-                   <h3 className="font-bold text-primary uppercase tracking-widest flex items-center gap-2">
-                     <BookOpen className="w-4 h-4" /> Inteligencia
-                   </h3>
-                   <button onClick={() => setShowHistoryMobile(false)} className="p-2 bg-white/10 rounded-lg text-white hover:bg-white/20 transition">
-                     <X className="w-5 h-5" />
-                   </button>
-                </div>
 
                 {/* Título en Desktop */}
                 <div className="hidden lg:block p-4 border-b border-white/10 bg-black/20 shrink-0">
@@ -331,25 +316,27 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
                 </div>
                 
                 {/* Historial */}
-                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto p-2 lg:p-4 custom-scrollbar bg-black/20 min-h-0">
                   <ClueHistory clues={gameState.clues || []} />
                 </div>
 
-                {/* Pista Actual Activa */}
-                {gameState.currentClue && (
-                  <div className="shrink-0 p-4 bg-black/40 border-t border-white/10">
-                    <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-center">
-                      <span className="text-[10px] uppercase font-black text-neutral-team mb-1 block">Adivinadas / Total</span>
-                      <span className="text-2xl font-black text-white">
-                        {gameState.guessesMade} <span className="text-white/30 mx-1">/</span> {gameState.currentClue.count === 0 ? "∞" : gameState.currentClue.count}
-                      </span>
+                {/* Info Pista Actual */}
+                {gameState.currentClue && gameState.status === "playing" && (
+                  <div className="shrink-0 p-2 lg:p-4 bg-black/40 border-t border-white/10 flex items-center justify-center gap-4 shadow-inner">
+                    <span className="hidden md:inline text-xs uppercase font-bold text-neutral-team">Pista Activa:</span>
+                    <div className="bg-white/10 px-3 py-1 rounded-lg font-black text-white text-lg">
+                      {gameState.currentClue.word} <span className="text-primary ml-1">({gameState.currentClue.count})</span>
+                    </div>
+                    <div className="text-center ml-2">
+                      <span className="text-[10px] uppercase text-neutral-team block leading-none">Adivinadas</span>
+                      <span className="font-bold text-white">{gameState.guessesMade} / {gameState.currentClue.count === 0 ? "∞" : gameState.currentClue.count}</span>
                     </div>
                   </div>
                 )}
 
-                {/* Input de Pista (Solo Líder) */}
+                {/* Input (Líder) */}
                 {gameState.status === "playing" && (
-                  <div className="shrink-0 p-4 border-t border-white/10 bg-black/60 pb-8 lg:pb-4">
+                  <div className="shrink-0 p-2 lg:p-4 bg-bg border-t border-white/10">
                     <ClueInput 
                       onGiveClue={handleGiveClue} disabled={!canGiveClue}
                       isMyTurn={isMyTurn} isSpymaster={effectiveIsSpymaster}
@@ -363,7 +350,7 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
         )}
       </main>
 
-      {/* ================= MODALES Y PANELES EXTRA ================= */}
+      {/* ================= MODALES FLOTANTES ================= */}
       <AnimatePresence>
         {showTeamsPanel && gameState.status === "playing" && (
           <>
@@ -373,7 +360,7 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
                 <h3 className="font-bold text-lg text-white flex items-center gap-2"><Users className="text-primary"/> Agentes</h3>
                 <button onClick={() => setShowTeamsPanel(false)} className="p-2 hover:bg-white/10 rounded-lg text-neutral-team transition-colors"><X className="w-5 h-5" /></button>
               </div>
-              <div className="p-4 flex-1 overflow-y-auto">
+              <div className="p-4 flex-1 overflow-y-auto custom-scrollbar">
                 <Controls players={gameState.players} currentPlayer={currentPlayer} onSelectTeam={handleSelectTeam} onSelectRole={handleSelectRole} onStartGame={handleStartGame} onMovePlayer={handleMovePlayer} gameStatus={gameState.status} maxPlayers={gameState.config.maxPlayers}/>
               </div>
             </motion.div>
@@ -381,14 +368,13 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
         )}
       </AnimatePresence>
 
-      {/* Modales de Confirmación */}
       <AnimatePresence>
         {showTerminateConfirm && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-bg/90 backdrop-blur-xl border border-[#FF4B4B]/30 rounded-2xl p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(255,75,75,0.2)]">
               <Power className="w-12 h-12 text-[#FF4B4B] mx-auto mb-4" />
               <h3 className="text-xl font-bold mb-2 text-white">¿Terminar Misión?</h3>
-              <p className="text-sm text-neutral-team mb-6">Volverán al cuartel.</p>
+              <p className="text-sm text-neutral-team mb-6">Todos volverán al cuartel general.</p>
               <div className="flex gap-3">
                 <button onClick={() => setShowTerminateConfirm(false)} className="flex-1 py-3 rounded-xl border border-white/10 text-white font-bold hover:bg-white/5">Cancelar</button>
                 <button onClick={confirmTerminate} className="flex-1 py-3 rounded-xl bg-[#FF4B4B] text-white font-bold hover:bg-[#FF4B4B]/80 shadow-[0_0_15px_rgba(255,75,75,0.4)]">Terminar</button>
@@ -401,7 +387,7 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-bg/90 backdrop-blur-xl border border-white/10 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
               <LogOut className="w-12 h-12 text-neutral-team mx-auto mb-4" />
               <h3 className="text-xl font-bold mb-2 text-white">¿Abandonar Sala?</h3>
-              <p className="text-sm text-neutral-team mb-6">Saldrás del juego.</p>
+              <p className="text-sm text-neutral-team mb-6">Saldrás de este cuartel y perderás tu puesto.</p>
               <div className="flex gap-3">
                 <button onClick={() => setShowLeaveConfirm(false)} className="flex-1 py-3 rounded-xl border border-white/10 text-white font-bold hover:bg-white/5">Cancelar</button>
                 <button onClick={confirmLeave} className="flex-1 py-3 rounded-xl bg-white text-bg font-bold hover:bg-white/90">Abandonar</button>
