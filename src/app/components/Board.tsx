@@ -5,6 +5,7 @@ import { Skull } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+// Utilidad para juntar clases de Tailwind limpiamente
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -18,7 +19,8 @@ interface BoardProps {
 
 export default function Board({ cards, isSpymaster, onCardClick, canClick }: BoardProps) {
   return (
-    <div className="grid grid-cols-5 gap-2 md:gap-3 lg:gap-4 h-full w-full p-2">
+    // Reduje un poquito el gap en móviles para ganar espacio
+    <div className="grid grid-cols-5 gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 h-full w-full p-1 sm:p-2">
       {cards.map((card) => (
         <Card 
           key={card.id} 
@@ -40,6 +42,7 @@ interface CardProps {
 }
 
 const Card: React.FC<CardProps> = ({ card, isSpymaster, onClick, disabled }) => {
+  // Lógica de colores según estado de la carta
   const getTeamStyles = (team: string, revealed: boolean, spymaster: boolean) => {
     if (revealed) {
       switch (team) {
@@ -71,32 +74,39 @@ const Card: React.FC<CardProps> = ({ card, isSpymaster, onClick, disabled }) => 
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "relative w-full h-full rounded-lg md:rounded-xl p-2 sm:p-3 md:p-4 flex items-center justify-center text-center transition-all duration-200",
-        "font-bold uppercase tracking-wide text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl",
+        // MAGIA RESPONSIVE: aspect-[4/3] en móviles las hace más rectangulares, aspect-square en PC
+        "relative w-full aspect-[4/3] lg:aspect-square rounded-lg md:rounded-xl p-1 sm:p-2 md:p-3 flex items-center justify-center text-center transition-all duration-200",
         getTeamStyles(card.team, card.revealed, isSpymaster),
-        !disabled && !card.revealed && "cursor-pointer active:scale-95",
+        !disabled && !card.revealed && "cursor-pointer active:scale-95 hover:shadow-primary/30",
         disabled && !card.revealed && "cursor-not-allowed opacity-90",
         card.revealed && "cursor-default"
       )}
     >
-      {/* Word */}
-      <span className={cn(
-        "relative z-10 px-1 leading-tight transition-all duration-300",
-        card.revealed && card.team !== "assassin" && "opacity-0",
-        card.revealed && card.team === "assassin" && "text-white font-black text-shadow-lg scale-110"
-      )}>
+      {/* MAGIA DE TEXTO: break-words, hyphens-auto y clamp() para garantizar que nunca rompa el diseño */}
+      <span 
+        className={cn(
+          "relative z-10 w-full px-0.5 leading-[1.1] sm:leading-none transition-all duration-300",
+          "font-black uppercase tracking-tighter break-words hyphens-auto",
+          card.revealed && card.team !== "assassin" && "opacity-0",
+          card.revealed && card.team === "assassin" && "text-white font-black text-shadow-lg scale-110"
+        )}
+        style={{ 
+          fontSize: "clamp(0.55rem, 1.2vw + 0.3rem, 1.25rem)", 
+          wordBreak: "break-word" 
+        }}
+      >
         {card.word}
       </span>
       
-      {/* Spymaster indicator dot */}
+      {/* Spymaster indicator dot (Icono y marca secreta del líder) */}
       {isSpymaster && !card.revealed && (
         <div className={cn(
-          "absolute top-1.5 right-1.5 md:top-2 md:right-2 w-2.5 h-2.5 md:w-3 md:h-3 rounded-full shadow-lg flex items-center justify-center",
-          card.team === "red" ? "bg-red-team shadow-[0_0_10px_rgba(255,75,75,0.7)]" : 
-          card.team === "blue" ? "bg-blue-team shadow-[0_0_10px_rgba(75,159,255,0.7)]" : 
-          card.team === "neutral" ? "bg-neutral-team shadow-[0_0_5px_rgba(148,163,184,0.5)]" : "bg-white shadow-[0_0_15px_rgba(255,255,255,0.9)]"
+          "absolute top-1 right-1 md:top-2 md:right-2 w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-full shadow-lg flex items-center justify-center",
+          card.team === "red" ? "bg-[#FF4B4B] shadow-[0_0_10px_rgba(255,75,75,0.7)]" : 
+          card.team === "blue" ? "bg-[#4B9FFF] shadow-[0_0_10px_rgba(75,159,255,0.7)]" : 
+          card.team === "neutral" ? "bg-[#94a3b8] shadow-[0_0_5px_rgba(148,163,184,0.5)]" : "bg-white shadow-[0_0_15px_rgba(255,255,255,0.9)]"
         )}>
-          {card.team === "assassin" && <Skull className="w-2 h-2 md:w-2.5 md:h-2.5 text-black" />}
+          {card.team === "assassin" && <Skull className="w-[10px] h-[10px] sm:w-3 sm:h-3 text-black" />}
         </div>
       )}
     </motion.button>

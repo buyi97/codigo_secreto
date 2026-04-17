@@ -25,29 +25,52 @@ export interface Clue {
 
 export interface GameConfig {
   timerDuration: number;
-  firstTurnMode: "timed" | "unlimited";
-  firstTurnDuration: number;
-  limitGuesses: boolean;
-  maxPlayers: number;
+  useTimer: boolean;
+  language: "es" | "en";
+  customWords: string[]; // <-- AGREGAMOS ESTO
 }
+
+export const DEFAULT_CONFIG: GameConfig = {
+  timerDuration: 120,
+  useTimer: true,
+  language: "es",
+  customWords: [], // <-- AGREGAMOS ESTO
+};
 
 export interface GameState {
   roomId: string;
-  status: "lobby" | "playing" | "ended";
   cards: Card[];
   players: Player[];
-  turn: "red" | "blue";
-  currentClue: Clue | null;
-  clues: Clue[];
-  timer: number;
-  isUltimatum: boolean;
-  guessesMade: number;
-  totalRed?: number;
-  totalBlue?: number;
-  winner: "red" | "blue" | null;
+  turn: Team;
+  status: "lobby" | "playing" | "finished";
+  winner?: Team | null;
   config: GameConfig;
-  history: {
-    red: number;
-    blue: number;
-  };
+  currentClue: { word: string; count: number } | null;
+  guessesMade: number;
+  timer: number;
+  isFirstTurn: boolean;
+  isUltimatum: boolean;
+  history: { red: number; blue: number }; // <-- HISTORIAL DE LA SALA
+}
+
+// Modificamos generateBoard para aceptar customWords
+export function generateBoard(wordList: string[], customWords: string[] = []): Card[] {
+  // Usar palabras custom si hay suficientes, sino fallback a la lista por defecto
+  const pool = customWords.length >= 25 ? customWords : wordList;
+  const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, 25);
+  
+  const teams: (Team | "neutral" | "assassin")[] = [
+    ...Array(9).fill("red"),
+    ...Array(8).fill("blue"),
+    ...Array(7).fill("neutral"),
+    "assassin",
+  ];
+  teams.sort(() => Math.random() - 0.5);
+
+  return shuffled.map((word, i) => ({
+    id: i.toString(),
+    word: word.toUpperCase(),
+    team: teams[i],
+    isRevealed: false,
+  }));
 }

@@ -37,26 +37,17 @@ io.on("connection", (socket) => {
     const roomId = generateRoomId();
     games[roomId] = {
       roomId,
-      cards: [],
-      players: [],
+      cards: generateBoard(WORDS_ES),
+      players: [{ id: socket.id, name: playerName, team: "red", role: "operative" }],
       turn: "red",
       status: "lobby",
-      winner: null,
-      clues: [],
-      timer: DEFAULT_CONFIG.timerDuration,
-      isUltimatum: false,
-      isFirstTurn: true,
+      config: { ...DEFAULT_CONFIG },
       currentClue: null,
       guessesMade: 0,
-      config: {
-        ...DEFAULT_CONFIG,
-        password: password || undefined,
-        isPublic: isPublic !== undefined ? isPublic : true,
-        maxPlayers: 8, // Default
-      },
-      totalRed: 0,
-      totalBlue: 0,
-      history: { red: 0, blue: 0 },
+      timer: DEFAULT_CONFIG.timerDuration,
+      isFirstTurn: true,
+      isUltimatum: false,
+      history: { red: 0, blue: 0 } // Inicializamos historial
     };
     
     socket.emit("roomCreated", roomId);
@@ -360,6 +351,20 @@ io.on("connection", (socket) => {
       }
     }
   });
+
+  socket.on("returnToLobby", ({ roomId }) => {
+    const game = games[roomId];
+    if (game) {
+      game.status = "lobby";
+      game.winner = null;
+      game.currentClue = null;
+      game.guessesMade = 0;
+      game.timer = game.config.timerDuration;
+      // No reseteamos las cartas aún, se resetean al darle "Empezar Partida"
+      io.to(roomId).emit("gameStateUpdate", game);
+    }
+  });
+  
 });
 
 // Timer logic
