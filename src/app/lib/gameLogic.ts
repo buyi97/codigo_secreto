@@ -25,52 +25,62 @@ export interface Clue {
 
 export interface GameConfig {
   timerDuration: number;
-  useTimer: boolean;
+  firstTurnMode: "timed" | "unlimited";
+  firstTurnDuration: number;
+  limitGuesses: boolean;
+  maxPlayers: number;
   language: "es" | "en";
-  customWords: string[]; // <-- AGREGAMOS ESTO
+  customWords: string[]; 
+  wordBankMode: "add" | "replace"; // <-- Agregado para saber qué hacer con las custom
 }
 
 export const DEFAULT_CONFIG: GameConfig = {
   timerDuration: 120,
-  useTimer: true,
+  firstTurnMode: "timed",
+  firstTurnDuration: 120,
+  limitGuesses: false,
+  maxPlayers: 10,
   language: "es",
-  customWords: [], // <-- AGREGAMOS ESTO
+  customWords: [],
+  wordBankMode: "add",
 };
 
 export interface GameState {
   roomId: string;
+  status: "lobby" | "playing" | "ended";
   cards: Card[];
   players: Player[];
-  turn: Team;
-  status: "lobby" | "playing" | "finished";
-  winner?: Team | null;
-  config: GameConfig;
-  currentClue: { word: string; count: number } | null;
-  guessesMade: number;
+  turn: "red" | "blue";
+  currentClue: Clue | null;
+  clues: Clue[];
   timer: number;
-  isFirstTurn: boolean;
   isUltimatum: boolean;
-  history: { red: number; blue: number }; // <-- HISTORIAL DE LA SALA
+  guessesMade: number;
+  totalRed?: number;
+  totalBlue?: number;
+  winner: "red" | "blue" | null;
+  config: GameConfig;
+  history: {
+    red: number;
+    blue: number;
+  };
 }
 
-// Modificamos generateBoard para aceptar customWords
-export function generateBoard(wordList: string[], customWords: string[] = []): Card[] {
-  // Usar palabras custom si hay suficientes, sino fallback a la lista por defecto
-  const pool = customWords.length >= 25 ? customWords : wordList;
-  const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, 25);
+export function generateBoard(wordList: string[], firstTeam: "red" | "blue"): Card[] {
+  const shuffled = [...wordList].sort(() => Math.random() - 0.5).slice(0, 25);
   
   const teams: (Team | "neutral" | "assassin")[] = [
-    ...Array(9).fill("red"),
-    ...Array(8).fill("blue"),
+    ...Array(firstTeam === "red" ? 9 : 8).fill("red"),
+    ...Array(firstTeam === "blue" ? 9 : 8).fill("blue"),
     ...Array(7).fill("neutral"),
     "assassin",
   ];
   teams.sort(() => Math.random() - 0.5);
 
   return shuffled.map((word, i) => ({
-    id: i.toString(),
+    id: i,
     word: word.toUpperCase(),
     team: teams[i],
-    isRevealed: false,
+    revealed: false,
   }));
 }
