@@ -162,6 +162,15 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
             </button>
           </div>
 
+          {/* NUEVO: Botón Salir siempre visible */}
+            <button 
+              onClick={() => setShowLeaveConfirm(true)} 
+              className="p-2 md:p-3 hover:bg-[#FF4B4B]/20 rounded-xl transition-colors border border-white/10 backdrop-blur-md group ml-1"
+              title="Abandonar Sala"
+            >
+              <LogOut className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 text-neutral-team group-hover:text-[#FF4B4B]" />
+            </button>
+
           {/* NUEVO: Indicador de Equipo (Aquí se verá en PC y Mobile) */}
           {currentPlayer && (currentPlayer.team === "red" || currentPlayer.team === "blue") && (
              <div className={cn(
@@ -233,9 +242,7 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
                <Users className="w-5 h-5 lg:w-6 lg:h-6" /> <span className="text-sm lg:text-base font-bold">Equipos</span>
              </button>
           )}
-          <button onClick={() => setShowLeaveConfirm(true)} className="p-3 hover:bg-[#FF4B4B]/20 rounded-xl transition-colors border border-white/20 backdrop-blur-md group">
-            <LogOut className="w-5 h-5 lg:w-6 lg:h-6 text-neutral-team group-hover:text-[#FF4B4B]" />
-          </button>
+          
         </div>
       </header>
 
