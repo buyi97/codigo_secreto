@@ -62,7 +62,7 @@ export default function Settings({ config, onUpdate, onClose, isHost }: Settings
                 !isHost && "opacity-50 cursor-not-allowed"
               )}
             >
-              Añadir a Oficial
+              Palabras Adicionales
             </button>
             <button
               onClick={() => setLocalConfig({ ...localConfig, wordBankMode: "replace" })}

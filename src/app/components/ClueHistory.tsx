@@ -45,7 +45,7 @@ export default function ClueHistory({ clues }: ClueHistoryProps) {
               >
                 <div className="flex flex-col items-start leading-none shrink-0">
                   <span className="text-[7px] md:text-[8px] uppercase font-black opacity-40 mb-1">Nº</span>
-                  <span className="font-black text-xl md:text-2xl">{clue.count === 0 ? "∞" : clue.count}</span>
+                  <span className="font-black text-xl md:text-2xl">{clue.count}</span>
                 </div>
                 <div className="flex flex-col items-end leading-none text-right flex-1 overflow-hidden">
                   <span className="text-[7px] md:text-[8px] uppercase font-black opacity-40 mb-1">Pista</span>

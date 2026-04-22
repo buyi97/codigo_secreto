@@ -10,6 +10,7 @@ import { LogOut, Trophy, Users, Copy, Check, Power, X, RotateCcw } from "lucide-
 import { motion, AnimatePresence } from "motion/react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { toast } from "sonner";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -60,14 +61,14 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
   const handleStartGame = () => {
     if (gameState.status === "playing") return;
     if (gameState.config.wordBankMode === "replace" && (gameState.config.customWords?.length || 0) < 25) {
-      alert("⚠️ Mínimo 25 palabras para usar un banco personalizado.");
+      toast.error("Mínimo 25 palabras para usar un banco personalizado."); // Cambiado aquí
       return;
     }
     if (gameState.players.length > 1) {
       const redSpymaster = gameState.players.find(p => p.team === "red" && p.role === "spymaster");
       const blueSpymaster = gameState.players.find(p => p.team === "blue" && p.role === "spymaster");
       if (!redSpymaster || !blueSpymaster) {
-        alert("Cada equipo debe tener un Líder asignado.");
+        toast.error("Cada equipo debe tener un Líder asignado."); // Cambiado aquí
         return;
       }
     }
@@ -107,8 +108,7 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
   };
 
   const copyRoomLink = () => {
-    const url = window.location.origin + "?room=" + gameState.roomId;
-    navigator.clipboard.writeText(url);
+    navigator.clipboard.writeText(gameState.roomId);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -217,6 +217,17 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
 
         {/* DERECHA: Botones de Config */}
         <div className="hidden md:flex items-center justify-end w-full md:w-auto gap-3 shrink-0">
+  
+          {/* NUEVO: Indicador de Equipo */}
+          {currentPlayer && (currentPlayer.team === "red" || currentPlayer.team === "blue") && (
+             <div className={cn(
+                "px-4 py-2 rounded-xl text-xs md:text-sm font-black uppercase tracking-widest border shadow-sm",
+                currentPlayer.team === "red" ? "bg-[#FF4B4B]/10 text-[#FF4B4B] border-[#FF4B4B]/30" : "bg-[#4B9FFF]/10 text-[#4B9FFF] border-[#4B9FFF]/30"
+             )}>
+               Agente {currentPlayer.team === "red" ? "Rojo" : "Azul"}
+             </div>
+          )}
+
           {gameState.status === "playing" && (
              <button onClick={() => setShowTeamsPanel(true)} className="px-4 py-3 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white flex items-center gap-2 transition-all shadow-lg">
                <Users className="w-5 h-5 lg:w-6 lg:h-6" /> <span className="text-sm lg:text-base font-bold">Equipos</span>
@@ -362,7 +373,7 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
                 )}
 
                 {/* Input de Pistas */}
-                {!isGameEnded && (
+                {!isGameEnded && effectiveIsSpymaster && (
                   <div className="shrink-0 p-3 lg:p-5 bg-bg border-t border-white/10">
                     <ClueInput 
                       onGiveClue={handleGiveClue} disabled={!canGiveClue}

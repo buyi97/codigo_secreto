@@ -82,8 +82,7 @@ export default function Lobby({ onJoin, initialRoomId, initialPlayerName, socket
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          // my-auto lo centra verticalmente solo si la pantalla es más alta que el contenido
-          className="w-full max-w-6xl mx-auto my-auto flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-12"
+          className="w-full max-w-6xl mx-auto mt-auto mb-auto py-8 flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-12"
         >
           {/* Left side - Branding */}
           <div className="text-center lg:text-left lg:flex-1 space-y-6 w-full">
@@ -262,7 +261,7 @@ export default function Lobby({ onJoin, initialRoomId, initialPlayerName, socket
                   whileTap={{ scale: 0.98 }}
                   className="w-full bg-gradient-to-r from-[#FF4B4B] to-[#4B9FFF] text-white py-4 rounded-xl font-black uppercase tracking-widest text-sm hover:shadow-lg hover:shadow-[#FF4B4B]/20 transition-all mt-2"
                 >
-                  {mode === "join" ? "Iniciar Misión" : "Establecer Cuartel"}
+                  {mode === "join" ? "Unirse a Sala" : "Crear Sala"}
                 </motion.button>
               </form>
 
