@@ -130,6 +130,7 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
 
   const canGiveClue = (effectiveIsSpymaster || isSinglePlayer) && isMyTurn && gameState.status === "playing" && !gameState.currentClue;
   const canClick = (!effectiveIsSpymaster || isSinglePlayer) && isMyTurn && gameState.status === "playing" && !!gameState.currentClue;
+  const isMyActiveTurn = canGiveClue || canClick;
   const isHost = currentPlayer?.isHost;
   const isCriticalTime = gameState.status === "playing" && gameState.timer > 0 && gameState.timer <= 10 && !gameState.isUltimatum;
 
@@ -307,6 +308,7 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
                    <div className={cn(
                      "w-full max-w-6xl h-full flex transition-opacity duration-700 mx-auto",
                      isGameEnded && "opacity-80" // Se mantiene visible
+                     isMyActiveTurn && "ring-4 ring-amber-400 rounded-2xl shadow-[0_0_30px_rgba(251,191,36,0.4)] z-10"
                    )}>
                      <Board cards={gameState.cards} isSpymaster={effectiveIsSpymaster} onCardClick={handleCardClick} canClick={canClick} />
                    </div>
@@ -359,7 +361,10 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
                 
                 {/* Historial */}
                 <div className="flex-1 overflow-y-auto p-2 lg:p-4 custom-scrollbar min-h-0 bg-black/10">
-                  <ClueHistory clues={gameState.clues || []} />
+                  <ClueHistory 
+                    clues={gameState.clues || []} 
+                    isMyActiveTurn={isMyActiveTurn} // <-- Nueva prop
+                  />
                 </div>
 
                 {/* Info de Pista Activa */}

@@ -11,14 +11,24 @@ function cn(...inputs: ClassValue[]) {
 
 interface ClueHistoryProps {
   clues: Clue[];
+  isMyActiveTurn?: boolean; // Añadir a la interfaz
 }
 
-export default function ClueHistory({ clues }: ClueHistoryProps) {
+export default function ClueHistory({ clues, isMyActiveTurn }: ClueHistoryProps) {
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className={cn(
+      "flex flex-col h-full overflow-hidden transition-all duration-300 p-1",
+      // Si es el turno activo, resaltamos todo el contenedor
+      isMyActiveTurn && "bg-amber-400/5 ring-1 ring-amber-400/30 rounded-xl"
+    )}>
       <div className="flex items-center gap-2 mb-4">
-        <History className="w-4 h-4 text-neutral-team" />
-        <h3 className="font-bold text-xs uppercase tracking-widest text-neutral-team">Historial de Pistas</h3>
+        <History className={cn("w-4 h-4", isMyActiveTurn ? "text-amber-400" : "text-neutral-team")} />
+        <h3 className={cn(
+          "font-bold text-xs uppercase tracking-widest",
+          isMyActiveTurn ? "text-amber-400" : "text-neutral-team"
+        )}>
+          Historial de Pistas {isMyActiveTurn && "• TU TURNO"}
+        </h3>
       </div>
 
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
