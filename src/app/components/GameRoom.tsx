@@ -307,7 +307,7 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
                 <div className="flex-1 w-full min-h-0 flex items-stretch justify-center relative mb-2 md:mb-4">
                    <div className={cn(
                      "w-full max-w-6xl h-full flex transition-opacity duration-700 mx-auto",
-                     isGameEnded && "opacity-80" // Se mantiene visible
+                     isGameEnded && "opacity-80", // Se mantiene visible
                      isMyActiveTurn && "ring-4 ring-amber-400 rounded-2xl shadow-[0_0_30px_rgba(251,191,36,0.4)] z-10"
                    )}>
                      <Board cards={gameState.cards} isSpymaster={effectiveIsSpymaster} onCardClick={handleCardClick} canClick={canClick} />
