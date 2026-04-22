@@ -55,10 +55,10 @@ export default function Lobby({ onJoin, initialRoomId, initialPlayerName, socket
 
   return (
     // FIX CLAVE PARA SCROLL MOBILE: block y min-h-screen en lugar de flex centrado restrictivo.
-    <div className="min-h-[100dvh] w-full flex flex-col bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#0a0a0a] relative overflow-x-hidden overflow-y-auto custom-scrollbar">
+    <div className="min-h-[100dvh] w-full flex flex-col bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#0a0a0a] relative overflow-x-hidden overflow-y-scroll custom-scrollbar">
       
       {/* Animated background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
         <motion.div 
           className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[#FF4B4B]/10 blur-[120px] rounded-full"
           animate={{
@@ -78,7 +78,7 @@ export default function Lobby({ onJoin, initialRoomId, initialPlayerName, socket
       </div>
 
       {/* Contenedor fluido con padding vertical grande para que se pueda scrollear si no entra */}
-      <div className="w-full flex-1 flex flex-col py-10 px-4 md:px-6 z-10">
+      <div className="relative w-full flex-1 flex flex-col py-10 px-4 md:px-6" style={{ zIndex: 1 }}>
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
