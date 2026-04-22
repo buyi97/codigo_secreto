@@ -144,23 +144,24 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
       <header className="w-full flex flex-col md:flex-row items-center justify-between bg-black/90 border-b border-white/10 shrink-0 z-20 p-2 px-3 md:px-6 lg:h-28 gap-2 md:gap-6 shadow-lg">
         
         {/* IZQUIERDA: Historial y Sala */}
-        <div className="flex items-center justify-between md:justify-start w-full md:w-auto gap-2 shrink-0">
+        <div className="flex flex-wrap items-center justify-between md:justify-start w-full md:w-auto gap-2 shrink-0">
           <div className="flex flex-col md:flex-row items-center gap-1 md:gap-3 bg-white/5 px-3 py-1.5 md:px-5 md:py-3 rounded-xl border border-white/10">
-            <span className="text-[9px] md:text-sm uppercase tracking-widest text-neutral-team font-black mr-1">Historial</span>
-            <div className="flex items-center">
-              <span className={cn("font-black text-sm md:text-2xl transition-all", history.red > history.blue ? "text-[#FF4B4B]" : "text-[#FF4B4B]/70")}>{history.red}</span>
-              <span className="text-white/20 text-xs md:text-xl mx-1">-</span>
-              <span className={cn("font-black text-sm md:text-2xl transition-all", history.blue > history.red ? "text-[#4B9FFF]" : "text-[#4B9FFF]/70")}>{history.blue}</span>
-            </div>
+             {/* ... (Código de Historial) ... */}
           </div>
           
           <div className="flex items-center gap-1.5 bg-black/50 text-white px-3 py-2 md:px-5 md:py-3 rounded-xl border border-white/10">
-            <span className="hidden sm:inline text-[10px] md:text-sm text-neutral-team uppercase font-bold">Sala:</span>
-            <span className="font-mono text-sm md:text-xl font-bold text-primary tracking-widest">{gameState.roomId}</span>
-            <button onClick={copyRoomLink} className="p-1 hover:bg-white/10 rounded transition-colors ml-1">
-              {copied ? <Check className="w-4 h-4 md:w-5 md:h-5 text-green-400" /> : <Copy className="w-4 h-4 md:w-5 md:h-5 text-neutral-team" />}
-            </button>
+             {/* ... (Código de Sala) ... */}
           </div>
+
+          {/* NUEVO: Indicador de Equipo (Aquí se verá en PC y Mobile) */}
+          {currentPlayer && (currentPlayer.team === "red" || currentPlayer.team === "blue") && (
+             <div className={cn(
+                "px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-sm font-black uppercase tracking-widest border shadow-sm ml-1",
+                currentPlayer.team === "red" ? "bg-[#FF4B4B]/10 text-[#FF4B4B] border-[#FF4B4B]/30" : "bg-[#4B9FFF]/10 text-[#4B9FFF] border-[#4B9FFF]/30"
+             )}>
+               Agente {currentPlayer.team === "red" ? "Rojo" : "Azul"}
+             </div>
+          )}
         </div>
 
         {/* CENTRO: Marcadores o Cartel de Victoria */}
@@ -217,16 +218,6 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
 
         {/* DERECHA: Botones de Config */}
         <div className="hidden md:flex items-center justify-end w-full md:w-auto gap-3 shrink-0">
-  
-          {/* NUEVO: Indicador de Equipo */}
-          {currentPlayer && (currentPlayer.team === "red" || currentPlayer.team === "blue") && (
-             <div className={cn(
-                "px-4 py-2 rounded-xl text-xs md:text-sm font-black uppercase tracking-widest border shadow-sm",
-                currentPlayer.team === "red" ? "bg-[#FF4B4B]/10 text-[#FF4B4B] border-[#FF4B4B]/30" : "bg-[#4B9FFF]/10 text-[#4B9FFF] border-[#4B9FFF]/30"
-             )}>
-               Agente {currentPlayer.team === "red" ? "Rojo" : "Azul"}
-             </div>
-          )}
 
           {gameState.status === "playing" && (
              <button onClick={() => setShowTeamsPanel(true)} className="px-4 py-3 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white flex items-center gap-2 transition-all shadow-lg">
@@ -327,7 +318,8 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
                         </button>
                       )}
                       
-                      {((!isSpymaster && isMyTurn) || (isSinglePlayer && gameState.currentClue)) && (
+                      {/* CÓDIGO ACTUALIZADO */}
+                      {((!isSpymaster && isMyTurn && gameState.currentClue) || (isSinglePlayer && gameState.currentClue)) && (
                         <button 
                           onClick={handleEndTurn} 
                           className="flex-1 md:flex-none md:w-[400px] py-3 md:py-4 bg-white text-bg rounded-xl text-sm md:text-lg font-black uppercase tracking-widest hover:bg-white/90 shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all active:scale-95"

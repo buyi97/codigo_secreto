@@ -3,6 +3,7 @@ import { io, Socket } from "socket.io-client";
 import { GameState, Player } from "./lib/gameLogic";
 import Lobby from "./components/Lobby";
 import GameRoom from "./components/GameRoom";
+import { Toaster } from "sonner";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
 
@@ -72,6 +73,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-bg text-text-main font-sans overflow-hidden">
+      <Toaster position="top-center" richColors theme="dark" /> {/* <-- AÑADE ESTA LÍNEA */}
       <GameRoom 
         gameState={gameState} 
         socket={socket} 

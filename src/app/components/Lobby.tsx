@@ -82,7 +82,8 @@ export default function Lobby({ onJoin, initialRoomId, initialPlayerName, socket
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-6xl mx-auto mt-auto mb-auto py-8 flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-12"
+          // ELIMINA CUALQUIER my-auto, mt-auto o mb-auto. Déjalo así:
+          className="w-full max-w-6xl mx-auto py-8 lg:py-12 flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-12"
         >
           {/* Left side - Branding */}
           <div className="text-center lg:text-left lg:flex-1 space-y-6 w-full">
