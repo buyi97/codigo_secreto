@@ -146,11 +146,20 @@ export default function GameRoom({ gameState, socket, currentPlayer, onLeave }: 
         {/* IZQUIERDA: Historial y Sala */}
         <div className="flex flex-wrap items-center justify-between md:justify-start w-full md:w-auto gap-2 shrink-0">
           <div className="flex flex-col md:flex-row items-center gap-1 md:gap-3 bg-white/5 px-3 py-1.5 md:px-5 md:py-3 rounded-xl border border-white/10">
-             {/* ... (Código de Historial) ... */}
+            <span className="text-[9px] md:text-sm uppercase tracking-widest text-neutral-team font-black mr-1">Historial</span>
+            <div className="flex items-center">
+              <span className={cn("font-black text-sm md:text-2xl transition-all", history.red > history.blue ? "text-[#FF4B4B]" : "text-[#FF4B4B]/70")}>{history.red}</span>
+              <span className="text-white/20 text-xs md:text-xl mx-1">-</span>
+              <span className={cn("font-black text-sm md:text-2xl transition-all", history.blue > history.red ? "text-[#4B9FFF]" : "text-[#4B9FFF]/70")}>{history.blue}</span>
+            </div>
           </div>
           
           <div className="flex items-center gap-1.5 bg-black/50 text-white px-3 py-2 md:px-5 md:py-3 rounded-xl border border-white/10">
-             {/* ... (Código de Sala) ... */}
+            <span className="hidden sm:inline text-[10px] md:text-sm text-neutral-team uppercase font-bold">Sala:</span>
+            <span className="font-mono text-sm md:text-xl font-bold text-primary tracking-widest">{gameState.roomId}</span>
+            <button onClick={copyRoomLink} className="p-1 hover:bg-white/10 rounded transition-colors ml-1">
+              {copied ? <Check className="w-4 h-4 md:w-5 md:h-5 text-green-400" /> : <Copy className="w-4 h-4 md:w-5 md:h-5 text-neutral-team" />}
+            </button>
           </div>
 
           {/* NUEVO: Indicador de Equipo (Aquí se verá en PC y Mobile) */}
